@@ -1,0 +1,27 @@
+# 构建输出目录（显式列出的变体 + build* 通配覆盖未来新增的目录名）
+build/
+build-debug/
+build-release/
+bin/
+bin-debug/
+bin-release/
+lib/
+
+# 编译中间产物兜底（防止在源码树内手动编译时泄漏）
+*.o
+*.a
+*.so
+*.d
+
+# clangd / 编辑器 / IDE
+.cache/
+.clangd/
+.vscode/
+.idea/
+compile_commands.json
+*.swp
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
