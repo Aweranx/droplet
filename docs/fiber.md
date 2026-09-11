@@ -1,5 +1,5 @@
 # 协程模块 fiber
-
+对称协程
 
 ## 为什么是 fcontext 而不是 ucontext
 
@@ -52,6 +52,7 @@ callee-saved），XMM 数据寄存器按 ABI 是 caller-saved 不用保存。
    jump_fcontext(back_ctx_, this) ──────────────▶ 回到恢复者 resume() 的返回点
    被 resume 后从这里"返回"，t.fctx 更新 back_ctx_
 ```
+调用resume的是prev协程，所以jump_fcontext的返回代表着回到了prev协程的调用栈。
 
 ### 与 ucontext 的关键差异：恢复点要手动保存
 
@@ -87,7 +88,7 @@ curr->back_ctx_ = t.fctx;
 ### 回调异常不跨栈传播
 
 协程函数抛出的异常不能跳出 run()（对方的栈帧早已不存在），run() 捕获后
-置 EXCEPT 状态并记录错误日志，resume() 正常返回。与 sylar 行为一致。
+置 EXCEPT 状态并记录错误日志，resume() 正常返回，使用exception_ptr保存在fiber里。
 
 ### reset 复用栈
 

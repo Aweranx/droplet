@@ -36,7 +36,8 @@ install(TARGETS droplet
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-# 将扫描到的头文件安装到同一目录；当前列表也可能包含 src/ 下的内部头文件。
-install(FILES ${DROPLET_HEADERS}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/droplet
+# 保留 include/ 下的相对目录结构安装公开头文件；否则 iomanager/iomanager.h
+# 和顶层转发头 iomanager.h 会被错误地压平到同一个目录并互相覆盖。
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
 )

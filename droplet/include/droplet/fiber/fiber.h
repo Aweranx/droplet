@@ -11,7 +11,8 @@ namespace droplet {
 class Scheduler;
 
 namespace detail {
-struct transfer_t;  // boost fcontext 的切换结构，见 src/fiber/fcontext/fcontext.hpp
+struct transfer_t;  // boost fcontext 的切换结构，见
+                    // src/fiber/fcontext/fcontext.hpp
 using fcontext_t = void*;
 }  // namespace detail
 
@@ -40,11 +41,11 @@ using fcontext_t = void*;
 class DROPLET_API Fiber final : public std::enable_shared_from_this<Fiber> {
  public:
   enum class State : uint8_t {
-    INIT,    ///< 已创建/已重置，尚未开始运行
-    HOLD,    ///< 让出后暂停，等待 resume
-    EXEC,    ///< 正在执行
-    TERM,    ///< 执行完毕
-    READY,   ///< 让出时主动声明可立即再次运行（供后续调度器使用）
+    INIT,  ///< 已创建/已重置，尚未开始运行
+    HOLD,  ///< 让出后暂停，等待 resume
+    EXEC,  ///< 正在执行
+    TERM,  ///< 执行完毕
+    READY,  ///< 让出时主动声明可立即再次运行（供后续调度器使用）
     EXCEPT,  ///< 执行中抛出未捕获异常
   };
   using Ptr = std::shared_ptr<Fiber>;
@@ -91,6 +92,14 @@ class DROPLET_API Fiber final : public std::enable_shared_from_this<Fiber> {
   [[nodiscard]] State getState() const noexcept { return state_; }
   /// 实际栈大小（字节）；主协程为 0。
   [[nodiscard]] uint32_t getStackSize() const noexcept { return stack_size_; }
+  [[nodiscard]] std::exception_ptr getException() const noexcept {
+    return exception_;
+  }
+  void rethrowException() const {
+    if (exception_) {
+      std::rethrow_exception(exception_);
+    }
+  }
 
  private:
   friend class Scheduler;  // 后续调度器需要直接操作上下文与状态
@@ -114,8 +123,9 @@ class DROPLET_API Fiber final : public std::enable_shared_from_this<Fiber> {
   void* stack_ = nullptr;  // 主协程为 nullptr（直接用线程自身栈）
   std::function<void()> cb_;
   State state_ = State::INIT;
-  detail::fcontext_t ctx_ = nullptr;       // 本协程上下文（jump 的目标）
+  detail::fcontext_t ctx_ = nullptr;  // 本协程上下文（jump 的目标）
   detail::fcontext_t back_ctx_ = nullptr;  // 最近一次进入时的恢复者上下文
+  std::exception_ptr exception_;
 };
 
 }  // namespace droplet

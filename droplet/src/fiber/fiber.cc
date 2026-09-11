@@ -7,6 +7,7 @@
 
 #include <atomic>
 #include <cstdlib>
+#include <exception>
 #include <new>
 #include <utility>
 
@@ -99,6 +100,7 @@ void Fiber::reset(std::function<void()> cb) {
   DROPLET_ASSERT(state_ == State::INIT || state_ == State::TERM ||
                  state_ == State::EXCEPT);
   cb_ = std::move(cb);
+  exception_ = nullptr;
   // fcontext 的上下文只是栈顶的一份寄存器布局：重新 make_fcontext
   // 覆盖入口即可整体复用旧栈，代价远小于重新分配。
   ctx_ = detail::make_fcontext(static_cast<char*>(stack_) + stack_size_,
@@ -188,13 +190,15 @@ void Fiber::run() {
     cb_();
   } catch (const std::exception& e) {
     // 异常不能跨协程栈传播（对方栈帧早已不同），转成 EXCEPT 状态上报。
+    exception_ = std::current_exception();
     state_ = State::EXCEPT;
     DROPLET_LOG_ERROR(GetRootLogger())
-        << "Fiber id=" << id_ << " 未捕获异常 what=" << e.what();
+        << "Fiber 未捕获异常 what=" << e.what();
   } catch (...) {
+    exception_ = std::current_exception();
     state_ = State::EXCEPT;
     DROPLET_LOG_ERROR(GetRootLogger())
-        << "Fiber id=" << id_ << " 未捕获未知异常";
+        << "Fiber 未捕获未知异常";
   }
   cb_ = nullptr;
   if (state_ == State::EXEC) {

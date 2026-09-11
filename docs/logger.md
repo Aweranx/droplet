@@ -22,6 +22,17 @@ FormattedRecordBuffer::view()
 
 Logger::Impl::submit里把一条record进行format到buffer，然后把buffer里的内容写入到appender里进行记录。
 
+## 架构
+### buffer
+
+### formatter
+
+### appender
+使用appender抽象，可以方便实现一个logger的输出位置，如终端日志，文件日志，以及网络日志。
+
+### logger
+对外提供宏，使用RAII完成日志采集
+
 
 # 优化
 
