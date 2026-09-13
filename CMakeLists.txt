@@ -25,7 +25,7 @@ message(STATUS "C++ compiler version: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPI
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-# 控制可选子模块是否参与构建。示例选项当前仅预留，尚未添加 examples 子目录。
+# 控制可选子模块是否参与构建。
 option(DROPLET_BUILD_EXAMPLES "Build examples" ON)
 option(DROPLET_BUILD_TESTS    "Build tests"    ON)
 option(DROPLET_BUILD_TOOLS    "Build tools"    ON)
@@ -68,6 +68,9 @@ FetchContent_MakeAvailable(yaml-cpp)
 
 # 主库始终参与构建；测试和工具按对应开关选择性加入。
 add_subdirectory(droplet)
+if(DROPLET_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
 if(DROPLET_BUILD_TESTS)
     # 启用 CTest，并注册 tests 目录中定义的测试用例。
     enable_testing()

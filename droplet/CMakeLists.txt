@@ -18,7 +18,8 @@ target_include_directories(droplet
 
 # PUBLIC 使 droplet 本身及其使用者都继承 droplet_options 中的编译和链接选项。
 # 配置模块的公开头文件直接包含 yaml-cpp 头文件，因此对其公开链接。
-target_link_libraries(droplet PUBLIC droplet_options yaml-cpp::yaml-cpp)
+target_link_libraries(droplet PUBLIC droplet_options yaml-cpp::yaml-cpp
+    ${CMAKE_DL_LIBS})
 
 
 # 主库在通用警告选项之上启用 -Werror，防止带警告的实现代码进入构建产物。
@@ -36,8 +37,8 @@ install(TARGETS droplet
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-# 保留 include/ 下的相对目录结构安装公开头文件；否则 iomanager/iomanager.h
-# 和顶层转发头 iomanager.h 会被错误地压平到同一个目录并互相覆盖。
+# 保留 include/ 下的相对目录结构安装公开头文件，确保各模块的头文件路径
+# 与源码中的 include 路径一致。
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
 )

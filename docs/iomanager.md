@@ -35,7 +35,7 @@ Fiber addEvent(fd, READ)
 ## 创建和停止
 
 ```cpp
-#include <droplet/iomanager.h>
+#include <droplet/iomanager/iomanager.h>
 
 droplet::IOManager iom(2, /*use_caller=*/false, "io");
 iom.start();

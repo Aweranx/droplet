@@ -1,11 +1,15 @@
 #include "droplet/scheduler/scheduler.h"
 
+#include <droplet/hook/hook.h>
 #include <utility>
 
 namespace droplet {
 
 void Scheduler::run() {
   setThis();
+  // Sylar 风格：调度线程中的阻塞系统调用由 hook 转换为 Fiber 等待。
+  // 线程离开调度循环前关闭，避免 hook 影响该线程的后续普通代码。
+  setHookEnabled(true);
 
   // 每个调度线程一个 idle 协程：可反复 resume（HOLD），仅在退出时 TERM。
   Fiber::Ptr idle_fiber = Fiber::Create([this] { idle(); });
@@ -60,6 +64,7 @@ void Scheduler::run() {
   if (t_scheduler_ == this) {
     t_scheduler_ = nullptr;
   }
+  setHookEnabled(false);
 }
 
 void Scheduler::idle() {
