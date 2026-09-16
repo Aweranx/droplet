@@ -1,5 +1,5 @@
 #include <droplet/types.h>
-#include <droplet/uri/uri.h>
+#include <droplet/http/uri.h>
 
 #include <algorithm>
 #include <cctype>

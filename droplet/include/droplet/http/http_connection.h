@@ -7,7 +7,7 @@
 #include <droplet/http/http_request.h>
 #include <droplet/http/http_response.h>
 #include <droplet/stream/socket_stream.h>
-#include <droplet/uri/uri.h>
+#include <droplet/http/uri.h>
 
 #include <atomic>
 #include <cstddef>

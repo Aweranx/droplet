@@ -1,5 +1,5 @@
 #include <droplet/socket/address.h>
-#include <droplet/uri/uri.h>
+#include <droplet/http/uri.h>
 
 #include <gtest/gtest.h>
 

@@ -1,7 +1,7 @@
 #include <droplet/socket/address.h>
 #include <droplet/types.h>
 #include <droplet/hook/hook.h>
-#include <droplet/iomanager/iomanager.h>
+#include <droplet/scheduler/iomanager.h>
 #include <droplet/socket/socket.h>
 
 #include <gtest/gtest.h>

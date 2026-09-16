@@ -4,6 +4,7 @@
 #include "fcontext/fcontext.hpp"
 
 #include <droplet/config/config.h>
+#include <droplet/macros.h>
 #include <droplet/logger/log.h>
 
 #include <atomic>

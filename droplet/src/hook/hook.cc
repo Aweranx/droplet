@@ -3,7 +3,7 @@
 
 #include <droplet/socket/fd_manager.h>
 #include <droplet/fiber/fiber.h>
-#include <droplet/iomanager/iomanager.h>
+#include <droplet/scheduler/iomanager.h>
 
 #include <dlfcn.h>
 

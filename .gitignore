@@ -6,6 +6,7 @@ bin/
 bin-debug/
 bin-release/
 lib/
+third_party/output/
 
 # 编译中间产物兜底（防止在源码树内手动编译时泄漏）
 *.o

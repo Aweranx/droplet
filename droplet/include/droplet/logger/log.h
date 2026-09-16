@@ -5,7 +5,6 @@
 #include <droplet/logger/appender.h>
 #include <droplet/logger/log_level.h>
 #include <droplet/logger/logger.h>
-#include <droplet/macros.h>
 
 #include <cstddef>
 #include <iosfwd>

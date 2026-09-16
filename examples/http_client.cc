@@ -1,5 +1,5 @@
 #include <droplet/http/http_connection.h>
-#include <droplet/iomanager/iomanager.h>
+#include <droplet/scheduler/iomanager.h>
 
 #include <exception>
 #include <future>

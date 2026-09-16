@@ -4,7 +4,7 @@
 
 #include <droplet/export.h>
 #include <droplet/scheduler/scheduler.h>
-#include <droplet/timer/timer.h>
+#include <droplet/scheduler/timer.h>
 
 #include <atomic>
 #include <cstdint>

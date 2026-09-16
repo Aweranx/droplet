@@ -1,10 +1,10 @@
 #pragma once
 
 #include <droplet/export.h>
-#include <droplet/macros.h>
 #include <droplet/types.h>
 
 #include <chrono>
+#include <string>
 
 namespace droplet {
 

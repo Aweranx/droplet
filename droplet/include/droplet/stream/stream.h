@@ -1,6 +1,6 @@
 #pragma once
 
-#include <droplet/bytearray/bytearray.h>
+#include <droplet/stream/bytearray.h>
 #include <droplet/export.h>
 
 #include <cstddef>

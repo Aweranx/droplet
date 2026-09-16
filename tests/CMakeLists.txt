@@ -63,4 +63,3 @@ endforeach()
 
 # GoogleTest 用例统一放在 tests/gtest，并通过独立的 CMake 逻辑自动收集。
 add_subdirectory(gtest)
-add_subdirectory(inner_tests)

@@ -1,4 +1,4 @@
-#include "droplet/timer/timer.h"
+#include "droplet/scheduler/timer.h"
 #include <droplet/types.h>
 
 #include <droplet/macros.h>

@@ -3,7 +3,6 @@
 #include <droplet/types.h>
 
 #include <droplet/export.h>
-#include <droplet/macros.h>
 
 #include <cstdint>
 #include <string_view>

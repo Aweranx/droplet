@@ -1,7 +1,7 @@
 # I/O 协程调度器 iomanager
 
-`IOManager` 位于 `droplet/include/droplet/iomanager/iomanager.h`，实现按职责拆分
-在 `droplet/src/iomanager/`：`iomanager.cc` 负责生命周期和底层 fd 上下文，
+`IOManager` 位于 `droplet/include/droplet/scheduler/iomanager.h`，实现按职责拆分
+在 `droplet/src/scheduler/`：`iomanager.cc` 负责生命周期和底层 fd 上下文，
 `iomanager_events.cc` 负责事件注册/取消/分发，`iomanager_idle.cc` 负责
 `epoll_wait`、eventfd 唤醒和停止判断。它继承 `Scheduler`，并组合
 `TimerManager`，在 Linux 上使用 `epoll + eventfd` 等待文件描述符和定时器。
@@ -35,7 +35,7 @@ Fiber addEvent(fd, READ)
 ## 创建和停止
 
 ```cpp
-#include <droplet/iomanager/iomanager.h>
+#include <droplet/scheduler/iomanager.h>
 
 droplet::IOManager iom(2, /*use_caller=*/false, "io");
 iom.start();

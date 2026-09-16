@@ -8,6 +8,7 @@ target_compile_options(droplet_options INTERFACE
         -Wextra
         -Wpedantic
         -fno-strict-aliasing
+        -Wno-builtin-macro-redefined
         # 将 __FILE__ 中的项目绝对路径映射为相对于项目根目录的路径。
         -fmacro-prefix-map=${PROJECT_SOURCE_DIR}=.
     >

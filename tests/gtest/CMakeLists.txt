@@ -6,6 +6,9 @@ file(GLOB DROPLET_GTEST_SOURCES CONFIGURE_DEPENDS
 )
 list(SORT DROPLET_GTEST_SOURCES)
 
+# 让测试中的 __FILE__ 直接使用项目相对路径，不再显示开头的 "./"。
+redefine_file_macro("${DROPLET_GTEST_SOURCES}")
+
 include(GoogleTest)
 
 foreach(TEST_SOURCE IN LISTS DROPLET_GTEST_SOURCES)
@@ -21,6 +24,19 @@ foreach(TEST_SOURCE IN LISTS DROPLET_GTEST_SOURCES)
         GTest::gtest_main
         Threads::Threads
     )
+
+    if(TEST_NAME STREQUAL "test_third_party")
+        # 这个测试直接调用几个外部库的 API，确保依赖产物已经安装完成。
+        target_link_libraries("${TEST_NAME}" PRIVATE
+            droplet::third_party_zlib
+            droplet::third_party_tinyxml2
+            droplet::third_party_kcp
+            droplet::third_party_absl_headers
+            droplet::third_party_protobuf_headers
+            rapidjson::rapidjson
+        )
+        add_dependencies("${TEST_NAME}" droplet_third_party_dependencies)
+    endif()
 
     # GoogleTest 示例会访问 logger 的内部头文件；公开 API 测试可以移除此路径。
     target_include_directories("${TEST_NAME}" PRIVATE

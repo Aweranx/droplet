@@ -1,6 +1,6 @@
 #include <droplet/http/http_connection.h>
 #include <droplet/http/http_server.h>
-#include <droplet/iomanager/iomanager.h>
+#include <droplet/scheduler/iomanager.h>
 #include <droplet/socket/address.h>
 #include <droplet/types.h>
 

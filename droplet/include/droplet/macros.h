@@ -1,20 +1,35 @@
 #pragma once
 
+#include <droplet/logger/log.h>
+#include <droplet/utils/system_utils.h>
+
 #include <cassert>
 #include <print>
+#include <sstream>
 
-#define DROPLET_ASSERT(x)                                              \
-  if (!(x)) [[unlikely]] {                                             \
-    std::print(stderr, "{}:{} ASSERT FAILED: {}\nStacktrace: to do\n", \
-               __FILE__, __LINE__, #x);                                \
-    assert(x);                                                         \
+#define DROPLET_ASSERT(x)                                          \
+  if (!(x)) [[unlikely]] {                                         \
+    const auto droplet_assert_backtrace = droplet::GetBacktrace(); \
+    std::print(stderr, "{}:{} ASSERT FAILED: {}\nStacktrace:\n{}", \
+               __FILE__, __LINE__, #x, droplet_assert_backtrace);    \
+    DROPLET_LOG_FATAL(DROPLET_LOG_ROOT())                           \
+        << "Assert failed: " << #x << "\nStacktrace:\n"           \
+        << droplet_assert_backtrace;                                \
+    assert(x);                                                       \
   }
 
-#define DROPLET_ASSERT2(x, w)                                                \
-  if (!(x)) [[unlikely]] {                                                   \
-    std::print(stderr, "{}:{} Assert {} failed. [{}].\nStacktrace: to do\n", \
-               __FILE__, __LINE__, #x, w);                                   \
-    assert(x);                                                               \
+#define DROPLET_ASSERT2(x, w)                                      \
+  if (!(x)) [[unlikely]] {                                         \
+    std::ostringstream droplet_assert_info;                       \
+    droplet_assert_info << w;                                     \
+    const auto droplet_assert_backtrace = droplet::GetBacktrace(); \
+    std::print(stderr, "{}:{} Assert {} failed. [{}].\nStacktrace:\n{}", \
+               __FILE__, __LINE__, #x, droplet_assert_info.str(), \
+               droplet_assert_backtrace);                          \
+    DROPLET_LOG_FATAL(DROPLET_LOG_ROOT())                           \
+        << "Assert " << #x << " failed. [" << droplet_assert_info.str() \
+        << "].\nStacktrace:\n" << droplet_assert_backtrace;       \
+    assert(x);                                                       \
   }
 
 #define ASSERT_RETVAL(x, val) \

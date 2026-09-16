@@ -1,4 +1,4 @@
-#include <droplet/bytearray/bytearray.h>
+#include <droplet/stream/bytearray.h>
 #include <droplet/types.h>
 
 #include <gtest/gtest.h>

@@ -1,5 +1,5 @@
 # 指定项目要求的最低 CMake 版本。项目使用了较新的生成器表达式和配置能力。
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 4.0)
 
 # 固定使用系统 GCC/G++，并写入缓存，确保首次及后续配置使用相同编译器。
 # FORCE 会覆盖命令行或已有缓存中的编译器设置，如需支持其他工具链可移除此处。
@@ -48,23 +48,8 @@ message(STATUS "Compiler default work jobs: ${CMAKE_BUILD_PARALLEL_LEVEL}")
 
 # 定义由所有目标共享的警告、优化、调试和链接选项。
 include(cmake/dropletOptions.cmake)
-
-# 配置模块依赖 yaml-cpp 解析 YAML；公开头文件中包含其头文件，故随主库一起编译。
-# 与测试侧引入 GoogleTest 的方式保持一致，使用 FetchContent 源码引入，无需系统安装。
-include(FetchContent)
-set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "Build yaml-cpp tests" FORCE)
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Build yaml-cpp tools" FORCE)
-set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "Build yaml-cpp contrib" FORCE)
-set(YAML_CPP_INSTALL OFF CACHE BOOL "Install yaml-cpp" FORCE)
-set(YAML_CPP_FORMAT_SOURCE OFF CACHE BOOL "Run clang-format on yaml-cpp" FORCE)
-FetchContent_Declare(
-    yaml-cpp
-    URL https://github.com/jbeder/yaml-cpp/archive/refs/tags/0.8.0.tar.gz
-)
-# yaml-cpp 0.8.0 声明的最低 CMake 版本低于 3.5，CMake 4.x 已移除该兼容层；
-# 通过策略变量放行其旧版声明，仅影响本次子目录引入。
-set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
-FetchContent_MakeAvailable(yaml-cpp)
+include(cmake/dropletDependencies.cmake)
+include(cmake/functions.cmake)
 
 # 主库始终参与构建；测试和工具按对应开关选择性加入。
 add_subdirectory(droplet)
@@ -76,6 +61,36 @@ if(DROPLET_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
-# if(DROPLET_BUILD_TOOLS)
-#     add_subdirectory(tools)
-# endif()
+if(DROPLET_BUILD_TOOLS AND EXISTS "${PROJECT_SOURCE_DIR}/tools/CMakeLists.txt")
+    add_subdirectory(tools)
+elseif(DROPLET_BUILD_TOOLS)
+    message(STATUS "DROPLET_BUILD_TOOLS is ON, but tools/CMakeLists.txt is missing; skipping tools")
+endif()
+
+set(DROPLET_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/droplet")
+
+configure_package_config_file(
+    cmake/dropletConfig.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/dropletConfig.cmake"
+    INSTALL_DESTINATION "${DROPLET_INSTALL_CMAKEDIR}"
+)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/dropletConfigVersion.cmake"
+    VERSION "${PROJECT_VERSION}"
+    COMPATIBILITY SameMajorVersion
+)
+
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/dropletConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/dropletConfigVersion.cmake"
+    DESTINATION "${DROPLET_INSTALL_CMAKEDIR}"
+)
+
+install(
+    EXPORT dropletTargets
+    FILE dropletTargets.cmake
+    NAMESPACE droplet::
+    DESTINATION "${DROPLET_INSTALL_CMAKEDIR}"
+)

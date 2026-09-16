@@ -1,4 +1,5 @@
 #include <droplet/logger/log.h>
+#include <droplet/utils/system_utils.h>
 #include <gtest/gtest.h>
 
 #include <cstdlib>
@@ -34,7 +35,7 @@ TEST(TestLogger, macro) {
   int i = 42;
   const char msg1[] = "hello";
   const std::string msg2 = "world";
-  const std::string_view msg3 = "droplet 磐石";
+  const std::string_view msg3 = "droplet 水滴";
 
   auto g_logger = logger;
   std::cout << "----------------------------------------------------"
@@ -46,4 +47,11 @@ TEST(TestLogger, macro) {
 
   logger->sync();
   std::cout << "\nThe same records were written to: " << output_path << '\n';
+}
+
+TEST(TestLogger, backtrace) {
+  const std::string backtrace = droplet::GetBacktrace();
+
+  ASSERT_FALSE(backtrace.empty());
+  std::cout << "Backtrace:\n" << backtrace;
 }

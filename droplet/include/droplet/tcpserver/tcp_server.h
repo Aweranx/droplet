@@ -3,7 +3,7 @@
 #include <droplet/types.h>
 
 #include <droplet/export.h>
-#include <droplet/iomanager/iomanager.h>
+#include <droplet/scheduler/iomanager.h>
 #include <droplet/socket/address.h>
 #include <droplet/socket/socket.h>
 #include <droplet/utils/noncopyable.h>
