@@ -1,4 +1,5 @@
 #include <droplet/config/config.h>
+#include <droplet/types.h>
 #include <droplet/fiber/fiber.h>
 #include <droplet/logger/log.h>
 #include <gtest/gtest.h>
@@ -50,7 +51,7 @@ TEST(TestFiber, run_to_term) {
 
 TEST(TestFiber, get_this_identity) {
   Fiber::Ptr inside;
-  uint64_t inside_id = 0;
+  u64 inside_id = 0;
   auto f = Fiber::Create([&] {
     inside = Fiber::GetThis();
     inside_id = Fiber::GetFiberId();
@@ -177,7 +178,7 @@ TEST(TestFiber, total_fibers) {
   // 提前创建可让计数断言与测试执行顺序无关。
   auto main_fiber = Fiber::GetThis();
   (void)main_fiber;
-  const uint64_t before = Fiber::TotalFibers();
+  const u64 before = Fiber::TotalFibers();
   auto f = Fiber::Create([] {});
   EXPECT_EQ(Fiber::TotalFibers(), before + 1);
   {
@@ -256,7 +257,7 @@ TEST(TestFiber, fibers_are_thread_local) {
 
 TEST(TestFiber, stack_size_from_config) {
   // fiber.cc 静态注册了 fiber.stack_size 配置项，可通过配置模块读取并热更。
-  auto var = Config::Lookup<uint32_t>("fiber.stack_size");
+  auto var = Config::Lookup<u32>("fiber.stack_size");
   ASSERT_NE(var, nullptr);
   EXPECT_EQ(var->getValue(), Fiber::kDefaultStackSize);
 

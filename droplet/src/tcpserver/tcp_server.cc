@@ -1,4 +1,5 @@
 #include "droplet/tcpserver/tcp_server.h"
+#include <droplet/types.h>
 
 #include <droplet/config/config.h>
 #include <droplet/logger/log.h>
@@ -16,8 +17,8 @@ namespace droplet {
 
 namespace {
 
-ConfigVar<uint64_t>::Ptr TcpServerRecvTimeout() {
-  static auto timeout = Config::Lookup<uint64_t>(
+ConfigVar<u64>::Ptr TcpServerRecvTimeout() {
+  static auto timeout = Config::Lookup<u64>(
       "tcp_server.read_timeout", TcpServer::kDefaultRecvTimeoutMs,
       "TCP server client receive timeout in milliseconds");
   return timeout;
@@ -237,13 +238,13 @@ void TcpServer::startAccept(Socket::Ptr listener) {
   while (!isStop() && listener && listener->isValid()) {
     Socket::Ptr client = listener->accept();
     if (client) {
-      const uint64_t timeout = getRecvTimeout();
-      const int64_t socket_timeout =
+      const u64 timeout = getRecvTimeout();
+      const i64 socket_timeout =
           timeout == UINT64_MAX
               ? -1
-              : static_cast<int64_t>(std::min<uint64_t>(
-                    timeout, static_cast<uint64_t>(
-                                 std::numeric_limits<int64_t>::max())));
+              : static_cast<i64>(std::min<u64>(
+                    timeout, static_cast<u64>(
+                                 std::numeric_limits<i64>::max())));
       client->setRecvTimeout(socket_timeout);
 
       auto self = shared_from_this();

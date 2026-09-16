@@ -1,4 +1,5 @@
 #include <droplet/macros.h>
+#include <droplet/types.h>
 
 #include <cerrno>
 #include <cstring>

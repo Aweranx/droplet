@@ -1,5 +1,7 @@
 #pragma once
 
+#include <droplet/types.h>
+
 #include <droplet/export.h>
 
 #include <cstddef>
@@ -79,6 +81,6 @@ extern getsockopt_fun getsockopt_f;
 extern setsockopt_fun setsockopt_f;
 
 int connect_with_timeout(int fd, const sockaddr* address, socklen_t length,
-                         uint64_t timeout_ms);
+                         u64 timeout_ms);
 
 }  // extern "C"

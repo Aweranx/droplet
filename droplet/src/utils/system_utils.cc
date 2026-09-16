@@ -1,4 +1,5 @@
 #include <droplet/utils/system_utils.h>
+#include <droplet/types.h>
 
 namespace droplet {
 

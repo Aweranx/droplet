@@ -1,4 +1,5 @@
 #include "droplet/socket/socket.h"
+#include <droplet/types.h>
 
 #include <droplet/socket/fd_manager.h>
 #include <droplet/hook/hook.h>
@@ -65,10 +66,10 @@ Socket::Socket(int family, int type, int protocol)
 Socket::~Socket() { (void)close(); }
 
 // 先去FdMgr的缓存查找，没有的时候才使用syscall获取
-int64_t Socket::getSendTimeout() const {
+i64 Socket::getSendTimeout() const {
   if (auto context = FdMgr::GetInstance().get(socket_)) {
-    const uint64_t timeout = context->getTimeout(SO_SNDTIMEO);
-    return timeout == UINT64_MAX ? -1 : static_cast<int64_t>(timeout);
+    const u64 timeout = context->getTimeout(SO_SNDTIMEO);
+    return timeout == UINT64_MAX ? -1 : static_cast<i64>(timeout);
   }
   timeval value{};
   socklen_t length = sizeof(value);
@@ -78,10 +79,10 @@ int64_t Socket::getSendTimeout() const {
   if (value.tv_sec == 0 && value.tv_usec == 0) {
     return -1;
   }
-  return static_cast<int64_t>(value.tv_sec) * 1000 + value.tv_usec / 1000;
+  return static_cast<i64>(value.tv_sec) * 1000 + value.tv_usec / 1000;
 }
 
-void Socket::setSendTimeout(int64_t milliseconds) {
+void Socket::setSendTimeout(i64 milliseconds) {
   if (milliseconds < 0) {
     milliseconds = 0;
   }
@@ -91,10 +92,10 @@ void Socket::setSendTimeout(int64_t milliseconds) {
   (void)setOption(SOL_SOCKET, SO_SNDTIMEO, value);
 }
 
-int64_t Socket::getRecvTimeout() const {
+i64 Socket::getRecvTimeout() const {
   if (auto context = FdMgr::GetInstance().get(socket_)) {
-    const uint64_t timeout = context->getTimeout(SO_RCVTIMEO);
-    return timeout == UINT64_MAX ? -1 : static_cast<int64_t>(timeout);
+    const u64 timeout = context->getTimeout(SO_RCVTIMEO);
+    return timeout == UINT64_MAX ? -1 : static_cast<i64>(timeout);
   }
   timeval value{};
   socklen_t length = sizeof(value);
@@ -104,10 +105,10 @@ int64_t Socket::getRecvTimeout() const {
   if (value.tv_sec == 0 && value.tv_usec == 0) {
     return -1;
   }
-  return static_cast<int64_t>(value.tv_sec) * 1000 + value.tv_usec / 1000;
+  return static_cast<i64>(value.tv_sec) * 1000 + value.tv_usec / 1000;
 }
 
-void Socket::setRecvTimeout(int64_t milliseconds) {
+void Socket::setRecvTimeout(i64 milliseconds) {
   if (milliseconds < 0) {
     milliseconds = 0;
   }
@@ -180,7 +181,7 @@ bool Socket::bind(const Address::Ptr& address) {
   return true;
 }
 
-bool Socket::connect(const Address::Ptr& address, uint64_t timeout_ms) {
+bool Socket::connect(const Address::Ptr& address, u64 timeout_ms) {
   if (!address) {
     errno = EINVAL;
     return false;
@@ -207,7 +208,7 @@ bool Socket::connect(const Address::Ptr& address, uint64_t timeout_ms) {
   return true;
 }
 
-bool Socket::reconnect(uint64_t timeout_ms) {
+bool Socket::reconnect(u64 timeout_ms) {
   if (!remote_address_) {
     errno = ENOTCONN;
     return false;

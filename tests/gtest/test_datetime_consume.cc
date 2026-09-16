@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <droplet/types.h>
 
 #include <array>
 #include <atomic>
@@ -16,13 +17,13 @@ constexpr int kRuns = 7;
 constexpr char kTimeFormat[] = "%Y-%m-%d %H:%M:%S";
 
 // 保存基准计算结果，防止编译器删除整个计时循环。
-std::atomic<std::uint64_t> benchmark_sink{0};
+std::atomic<u64> benchmark_sink{0};
 
-std::uint64_t Observe(std::string_view value) noexcept {
+u64 Observe(std::string_view value) noexcept {
   if (value.empty()) {
     return 0;
   }
-  return static_cast<std::uint64_t>(value.size()) +
+  return static_cast<u64>(value.size()) +
          static_cast<unsigned char>(value.front()) +
          static_cast<unsigned char>(value[value.size() / 2]) +
          static_cast<unsigned char>(value.back());
@@ -44,7 +45,7 @@ std::time_t CurrentSecond() noexcept {
       std::chrono::duration_cast<std::chrono::seconds>(now).count());
 }
 
-std::uint64_t FormatAndObserve(std::time_t timestamp) noexcept {
+u64 FormatAndObserve(std::time_t timestamp) noexcept {
   std::array<char, 20> output{};
   const std::size_t size =
       FormatLocalTime(timestamp, output.data(), output.size());
@@ -73,7 +74,7 @@ class CachedDateTime {
 template <typename Operation>
 std::chrono::nanoseconds Measure(std::size_t iterations,
                                  Operation&& operation) {
-  std::uint64_t checksum = 0;
+  u64 checksum = 0;
   const auto begin = std::chrono::steady_clock::now();
   for (std::size_t index = 0; index < iterations; ++index) {
     checksum += operation();
@@ -115,7 +116,7 @@ TEST(DateTimeConsumeTest, CachedFormattingMatchesUncachedFormatting) {
 
   // 保留原测试的基准：空循环、每次转换、按秒缓存转换。
   const auto baseline = Average(
-      [] { return Measure(kIterations, [] { return std::uint64_t{1}; }); });
+      [] { return Measure(kIterations, [] { return u64{1}; }); });
   const auto uncached = Average([] {
     return Measure(kIterations,
                    [] { return FormatAndObserve(std::time(nullptr)); });

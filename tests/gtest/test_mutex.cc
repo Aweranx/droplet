@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <droplet/types.h>
 
 #include <array>
 #include <atomic>
@@ -19,7 +20,7 @@
 namespace {
 
 constexpr int kRuns = 7;
-constexpr std::uint64_t kOperations = 1'000'000;
+constexpr u64 kOperations = 1'000'000;
 constexpr std::array<std::size_t, 5> kThreadCounts = {1, 2, 4, 8, 10};
 // 0 表示短临界区，100 用于模拟较长的临界区。
 constexpr std::array<unsigned, 2> kWorkRounds = {0, 100};
@@ -50,7 +51,7 @@ class AtomicFlagSpinlock {
   std::atomic_flag mutex_ = ATOMIC_FLAG_INIT;
 };
 
-std::uint64_t BusyWork(std::uint64_t value, unsigned rounds) noexcept {
+u64 BusyWork(u64 value, unsigned rounds) noexcept {
   for (unsigned index = 0; index < rounds; ++index) {
     value ^= value >> 30;
     value *= 0xbf58476d1ce4e5b9ULL;
@@ -61,10 +62,10 @@ std::uint64_t BusyWork(std::uint64_t value, unsigned rounds) noexcept {
   return value;
 }
 
-std::uint64_t OperationsForThread(std::size_t thread_index,
+u64 OperationsForThread(std::size_t thread_index,
                                   std::size_t thread_count) {
-  const std::uint64_t base = kOperations / thread_count;
-  const std::uint64_t remainder = kOperations % thread_count;
+  const u64 base = kOperations / thread_count;
+  const u64 remainder = kOperations % thread_count;
   return base + (thread_index < remainder ? 1 : 0);
 }
 
@@ -102,15 +103,15 @@ std::chrono::nanoseconds BenchmarkThreads(std::size_t thread_count,
 struct BenchmarkResult {
   double average_nanoseconds = 0.0;
   bool counter_is_correct = false;
-  std::uint64_t work_sink = 0;
+  u64 work_sink = 0;
 };
 
 template <typename Mutex>
 BenchmarkResult MeasureMutex(std::size_t thread_count,
                              unsigned work_rounds) {
   Mutex mutex;
-  std::uint64_t counter = 0;
-  std::uint64_t work_sink = 0;
+  u64 counter = 0;
+  u64 work_sink = 0;
   long double total_nanoseconds = 0.0L;
   bool counter_is_correct = true;
 
@@ -120,12 +121,12 @@ BenchmarkResult MeasureMutex(std::size_t thread_count,
     const auto elapsed = BenchmarkThreads(
         thread_count,
         [&mutex, &counter, &work_sink,
-         work_rounds](std::size_t thread_index, std::uint64_t operations) {
-          for (std::uint64_t index = 0; index < operations; ++index) {
+         work_rounds](std::size_t thread_index, u64 operations) {
+          for (u64 index = 0; index < operations; ++index) {
             std::lock_guard<Mutex> lock(mutex);
             if (work_rounds != 0) {
               work_sink = BusyWork(
-                  work_sink ^ static_cast<std::uint64_t>(thread_index) ^ index,
+                  work_sink ^ static_cast<u64>(thread_index) ^ index,
                   work_rounds);
             }
             ++counter;

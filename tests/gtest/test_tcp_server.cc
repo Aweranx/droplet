@@ -1,4 +1,5 @@
 #include <droplet/iomanager/iomanager.h>
+#include <droplet/types.h>
 #include <droplet/socket/address.h>
 #include <droplet/stream/socket_stream.h>
 #include <droplet/tcpserver/tcp_server.h>
@@ -26,7 +27,7 @@ class EchoTcpServer final : public droplet::TcpServer {
   void handleClient(droplet::Socket::Ptr client) override {
     bool ok =
         droplet::IOManager::GetThis() == getIoWorker() && client &&
-        client->getRecvTimeout() == static_cast<int64_t>(getRecvTimeout());
+        client->getRecvTimeout() == static_cast<i64>(getRecvTimeout());
     droplet::SocketStream stream(std::move(client));
     std::array<char, 256> buffer{};
     while (true) {

@@ -1,4 +1,5 @@
 #include "logger/formatter.h"
+#include <droplet/types.h>
 
 #include <array>
 #include <charconv>
@@ -156,7 +157,7 @@ class MicrosecondsFormatItem final : public Formatter::FormatItem {
         std::chrono::duration_cast<std::chrono::microseconds>(
             record.timestamp_.time_since_epoch())
             .count();
-    std::int64_t microseconds = total_microseconds % 1'000'000;
+    i64 microseconds = total_microseconds % 1'000'000;
     if (microseconds < 0) {
       microseconds += 1'000'000;
     }

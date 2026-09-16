@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <droplet/types.h>
 
 #include <format>
 #include <limits>

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <droplet/types.h>
+
 #include <droplet/export.h>
 
 #include <cstdint>
@@ -40,7 +42,7 @@ using fcontext_t = void*;
  */
 class DROPLET_API Fiber final : public std::enable_shared_from_this<Fiber> {
  public:
-  enum class State : uint8_t {
+  enum class State : u8 {
     INIT,  ///< 已创建/已重置，尚未开始运行
     HOLD,  ///< 让出后暂停，等待 resume
     EXEC,  ///< 正在执行
@@ -51,13 +53,13 @@ class DROPLET_API Fiber final : public std::enable_shared_from_this<Fiber> {
   using Ptr = std::shared_ptr<Fiber>;
 
   /// 默认栈大小（字节），与 sylar 一致；为 0 时读取配置项 fiber.stack_size
-  static constexpr uint32_t kDefaultStackSize = 128 * 1024;
+  static constexpr u32 kDefaultStackSize = 128 * 1024;
   /// 栈大小下限：fcontext 布局 + 入口函数帧至少需要几 KB
-  static constexpr uint32_t kMinStackSize = 16 * 1024;
+  static constexpr u32 kMinStackSize = 16 * 1024;
 
   /// 创建协程；stack_size 为 0 时使用配置项 fiber.stack_size 的当前值。
   [[nodiscard]] static Ptr Create(std::function<void()> cb,
-                                  uint32_t stack_size = 0);
+                                  u32 stack_size = 0);
 
   /// 析构会释放协程栈；要求协程已离开自己的栈（见类注释的存活约束）。
   ~Fiber();
@@ -84,14 +86,14 @@ class DROPLET_API Fiber final : public std::enable_shared_from_this<Fiber> {
   /// 当前线程所在的协程；首次调用会为线程创建主协程。
   [[nodiscard]] static Ptr GetThis();
   /// 当前协程 id；尚未进入协程环境（thread_local 未初始化）时返回 0。
-  [[nodiscard]] static uint64_t GetFiberId();
+  [[nodiscard]] static u64 GetFiberId();
   /// 存活协程总数（含各线程的主协程）。
-  [[nodiscard]] static uint64_t TotalFibers();
+  [[nodiscard]] static u64 TotalFibers();
 
-  [[nodiscard]] uint64_t getId() const noexcept { return id_; }
+  [[nodiscard]] u64 getId() const noexcept { return id_; }
   [[nodiscard]] State getState() const noexcept { return state_; }
   /// 实际栈大小（字节）；主协程为 0。
-  [[nodiscard]] uint32_t getStackSize() const noexcept { return stack_size_; }
+  [[nodiscard]] u32 getStackSize() const noexcept { return stack_size_; }
   [[nodiscard]] std::exception_ptr getException() const noexcept {
     return exception_;
   }
@@ -107,7 +109,7 @@ class DROPLET_API Fiber final : public std::enable_shared_from_this<Fiber> {
   /// 主协程：代表线程自身的调用栈，无独立栈，每线程仅一份。
   Fiber();
   /// 子协程：分配独立栈并布置 fcontext 入口。
-  Fiber(std::function<void()> cb, uint32_t stack_size);
+  Fiber(std::function<void()> cb, u32 stack_size);
 
   /// 登记线程的"当前协程"（同时维护裸指针与持有引用）。
   static void SetThis(Fiber* f);
@@ -118,8 +120,8 @@ class DROPLET_API Fiber final : public std::enable_shared_from_this<Fiber> {
   /// 执行回调并收尾（TERM/EXCEPT），最后跳回恢复者，不再返回。
   void run();
 
-  uint64_t id_ = 0;
-  uint32_t stack_size_ = 0;
+  u64 id_ = 0;
+  u32 stack_size_ = 0;
   void* stack_ = nullptr;  // 主协程为 nullptr（直接用线程自身栈）
   std::function<void()> cb_;
   State state_ = State::INIT;

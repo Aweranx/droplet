@@ -1,4 +1,5 @@
 #include "droplet/hook/hook.h"
+#include <droplet/types.h>
 
 #include <droplet/socket/fd_manager.h>
 #include <droplet/fiber/fiber.h>
@@ -51,7 +52,7 @@ namespace {
 
 thread_local bool t_hook_enabled = false;
 std::once_flag g_init_once;
-std::atomic<uint64_t> g_connect_timeout{5000};
+std::atomic<u64> g_connect_timeout{5000};
 
 template <class Function>
 Function Resolve(const char* name) noexcept {
@@ -116,7 +117,7 @@ ssize_t DoIo(int fd, OriginFunction function, const char* /*name*/,
     return function(fd, std::forward<Args>(args)...);
   }
 
-  const uint64_t timeout = context->getTimeout(timeout_option);
+  const u64 timeout = context->getTimeout(timeout_option);
   auto timer_info = std::make_shared<TimerInfo>();
 
   while (true) {
@@ -226,7 +227,7 @@ unsigned int sleep(unsigned int seconds) {
   if (!iom || !fiber || fiber->getStackSize() == 0) {
     return droplet::sleep_f(seconds);
   }
-  (void)iom->addTimer(static_cast<uint64_t>(seconds) * 1000,
+  (void)iom->addTimer(static_cast<u64>(seconds) * 1000,
                       [iom, fiber] { iom->schedule(fiber); });
   droplet::Fiber::yield_to_hold();
   return 0;
@@ -242,7 +243,7 @@ int usleep(useconds_t usec) {
   if (!iom || !fiber || fiber->getStackSize() == 0 || usec == 0) {
     return droplet::usleep_f(usec);
   }
-  const uint64_t milliseconds = (static_cast<uint64_t>(usec) + 999) / 1000;
+  const u64 milliseconds = (static_cast<u64>(usec) + 999) / 1000;
   (void)iom->addTimer(milliseconds, [iom, fiber] { iom->schedule(fiber); });
   droplet::Fiber::yield_to_hold();
   return 0;
@@ -258,9 +259,9 @@ int nanosleep(const timespec* request, timespec* remainder) {
   if (!iom || !fiber || fiber->getStackSize() == 0) {
     return droplet::nanosleep_f(request, remainder);
   }
-  const uint64_t milliseconds =
-      static_cast<uint64_t>(request->tv_sec) * 1000 +
-      (static_cast<uint64_t>(request->tv_nsec) + 999999) / 1000000;
+  const u64 milliseconds =
+      static_cast<u64>(request->tv_sec) * 1000 +
+      (static_cast<u64>(request->tv_nsec) + 999999) / 1000000;
   (void)iom->addTimer(milliseconds, [iom, fiber] { iom->schedule(fiber); });
   droplet::Fiber::yield_to_hold();
   if (remainder) {
@@ -301,7 +302,7 @@ int socketpair(int domain, int type, int protocol, int sockets[2]) {
 }
 
 int connect_with_timeout(int fd, const sockaddr* address, socklen_t length,
-                         uint64_t timeout_ms) {
+                         u64 timeout_ms) {
   droplet::EnsureOriginalFunctions();
   if (!droplet::isHookEnabled()) {
     return droplet::connect_f(fd, address, length);
@@ -615,9 +616,9 @@ int setsockopt(int fd, int level, int option, const void* value,
       length >= sizeof(timeval)) {
     if (auto context = droplet::FdMgr::GetInstance().get(fd)) {
       const auto* timeout = static_cast<const timeval*>(value);
-      const uint64_t milliseconds =
-          static_cast<uint64_t>(timeout->tv_sec) * 1000 +
-          static_cast<uint64_t>(timeout->tv_usec + 999) / 1000;
+      const u64 milliseconds =
+          static_cast<u64>(timeout->tv_sec) * 1000 +
+          static_cast<u64>(timeout->tv_usec + 999) / 1000;
       // A zero timeval means "no timeout"; any positive sub-millisecond
       // value still needs a finite wait, rounded up to one millisecond.
       const bool no_timeout = timeout->tv_sec == 0 && timeout->tv_usec == 0;

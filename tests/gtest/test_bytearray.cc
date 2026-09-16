@@ -1,4 +1,5 @@
 #include <droplet/bytearray/bytearray.h>
+#include <droplet/types.h>
 
 #include <gtest/gtest.h>
 
@@ -23,8 +24,8 @@ TEST(ByteArrayTest, FixedTypesRoundTripAcrossNodes) {
   bytes.writeFloat(1.25f);
   bytes.writeDouble(-9.5);
 
-  EXPECT_EQ(bytes.getSize(), sizeof(std::int8_t) + sizeof(std::uint16_t) +
-                                 sizeof(std::int32_t) + sizeof(std::uint64_t) +
+  EXPECT_EQ(bytes.getSize(), sizeof(i8) + sizeof(u16) +
+                                 sizeof(i32) + sizeof(u64) +
                                  sizeof(float) + sizeof(double));
 
   bytes.setPosition(0);
@@ -56,26 +57,26 @@ TEST(ByteArrayTest, FixedIntegersRespectConfiguredEndian) {
 
 TEST(ByteArrayTest, VarintsAndLengthPrefixedStringsRoundTrip) {
   ByteArray bytes(1);
-  const std::vector<std::uint32_t> unsigned_values = {
-      0u, 1u, 127u, 128u, 16384u, std::numeric_limits<std::uint32_t>::max()};
+  const std::vector<u32> unsigned_values = {
+      0u, 1u, 127u, 128u, 16384u, std::numeric_limits<u32>::max()};
   for (const auto value : unsigned_values) {
     bytes.writeUint32(value);
   }
-  const std::vector<std::int32_t> signed_values = {
-      std::numeric_limits<std::int32_t>::min(), -1, 0, 1,
-      std::numeric_limits<std::int32_t>::max()};
+  const std::vector<i32> signed_values = {
+      std::numeric_limits<i32>::min(), -1, 0, 1,
+      std::numeric_limits<i32>::max()};
   for (const auto value : signed_values) {
     bytes.writeInt32(value);
   }
-  const std::vector<std::uint64_t> wide_values = {
+  const std::vector<u64> wide_values = {
       0ull, 127ull, 128ull, 1ull << 32,
-      std::numeric_limits<std::uint64_t>::max()};
+      std::numeric_limits<u64>::max()};
   for (const auto value : wide_values) {
     bytes.writeUint64(value);
   }
-  const std::vector<std::int64_t> wide_signed_values = {
-      std::numeric_limits<std::int64_t>::min(), -1, 0, 1,
-      std::numeric_limits<std::int64_t>::max()};
+  const std::vector<i64> wide_signed_values = {
+      std::numeric_limits<i64>::min(), -1, 0, 1,
+      std::numeric_limits<i64>::max()};
   for (const auto value : wide_signed_values) {
     bytes.writeInt64(value);
   }
@@ -152,7 +153,7 @@ TEST(ByteArrayTest, FileRoundTripAndBounds) {
 
 TEST(ByteArrayTest, InvalidVarintIsRejected) {
   ByteArray bytes(2);
-  const std::uint8_t malformed[] = {0x80u, 0x80u, 0x80u, 0x80u, 0x10u};
+  const u8 malformed[] = {0x80u, 0x80u, 0x80u, 0x80u, 0x10u};
   bytes.write(malformed, sizeof(malformed));
   bytes.setPosition(0);
   EXPECT_THROW((void)bytes.readUint32(), std::out_of_range);

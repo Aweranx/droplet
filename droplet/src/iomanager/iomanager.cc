@@ -1,4 +1,5 @@
 #include "droplet/iomanager/iomanager.h"
+#include <droplet/types.h>
 
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
@@ -69,8 +70,8 @@ bool IOManager::validEvent(EventMask event) noexcept {
   return event == READ || event == WRITE;
 }
 
-uint32_t IOManager::toEpollEvents(EventMask events) noexcept {
-  uint32_t result = 0;
+u32 IOManager::toEpollEvents(EventMask events) noexcept {
+  u32 result = 0;
   if (events & READ) {
     result |= EPOLLIN;
   }

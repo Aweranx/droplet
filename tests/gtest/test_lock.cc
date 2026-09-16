@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <droplet/types.h>
 
 #include <array>
 #include <atomic>
@@ -16,19 +17,19 @@
 namespace {
 
 constexpr int kRuns = 7;
-constexpr std::uint64_t kOperations = 1'000'000;
+constexpr u64 kOperations = 1'000'000;
 constexpr std::array<std::size_t, 5> kThreadCounts = {1, 2, 4, 8, 10};
 
-std::uint64_t counter = 0;
-std::atomic<std::uint64_t> atomic_counter{0};
+u64 counter = 0;
+std::atomic<u64> atomic_counter{0};
 std::mutex mutex;
 std::shared_mutex shared_mutex;
-std::atomic<std::uint64_t> benchmark_sink{0};
+std::atomic<u64> benchmark_sink{0};
 
-std::uint64_t OperationsForThread(std::size_t thread_index,
+u64 OperationsForThread(std::size_t thread_index,
                                   std::size_t thread_count) {
-  const std::uint64_t base = kOperations / thread_count;
-  const std::uint64_t remainder = kOperations % thread_count;
+  const u64 base = kOperations / thread_count;
+  const u64 remainder = kOperations % thread_count;
   return base + (thread_index < remainder ? 1 : 0);
 }
 
@@ -66,8 +67,8 @@ std::chrono::nanoseconds BenchmarkThreads(std::size_t thread_count,
 std::chrono::nanoseconds TestMutex(std::size_t thread_count) {
   counter = 0;
   return BenchmarkThreads(
-      thread_count, [](std::size_t /*thread_index*/, std::uint64_t operations) {
-        for (std::uint64_t index = 0; index < operations; ++index) {
+      thread_count, [](std::size_t /*thread_index*/, u64 operations) {
+        for (u64 index = 0; index < operations; ++index) {
           std::lock_guard<std::mutex> lock(mutex);
           ++counter;
         }
@@ -77,8 +78,8 @@ std::chrono::nanoseconds TestMutex(std::size_t thread_count) {
 std::chrono::nanoseconds TestSharedMutex(std::size_t thread_count) {
   counter = 0;
   return BenchmarkThreads(
-      thread_count, [](std::size_t /*thread_index*/, std::uint64_t operations) {
-        for (std::uint64_t index = 0; index < operations; ++index) {
+      thread_count, [](std::size_t /*thread_index*/, u64 operations) {
+        for (u64 index = 0; index < operations; ++index) {
           std::unique_lock<std::shared_mutex> lock(shared_mutex);
           ++counter;
         }
@@ -88,8 +89,8 @@ std::chrono::nanoseconds TestSharedMutex(std::size_t thread_count) {
 std::chrono::nanoseconds TestAtomic(std::size_t thread_count) {
   atomic_counter.store(0, std::memory_order_relaxed);
   return BenchmarkThreads(
-      thread_count, [](std::size_t /*thread_index*/, std::uint64_t operations) {
-        for (std::uint64_t index = 0; index < operations; ++index) {
+      thread_count, [](std::size_t /*thread_index*/, u64 operations) {
+        for (u64 index = 0; index < operations; ++index) {
           atomic_counter.fetch_add(1, std::memory_order_relaxed);
         }
       });
@@ -98,9 +99,9 @@ std::chrono::nanoseconds TestAtomic(std::size_t thread_count) {
 std::chrono::nanoseconds TestAtomicCAS(std::size_t thread_count) {
   atomic_counter.store(0, std::memory_order_relaxed);
   return BenchmarkThreads(
-      thread_count, [](std::size_t /*thread_index*/, std::uint64_t operations) {
-        for (std::uint64_t index = 0; index < operations; ++index) {
-          std::uint64_t expected =
+      thread_count, [](std::size_t /*thread_index*/, u64 operations) {
+        for (u64 index = 0; index < operations; ++index) {
+          u64 expected =
               atomic_counter.load(std::memory_order_relaxed);
           while (!atomic_counter.compare_exchange_weak(
               expected, expected + 1, std::memory_order_relaxed,
@@ -152,7 +153,7 @@ TEST_P(LockBenchmarkTest, ComparesLockImplementations) {
 
   // 将一个值写入全局 sink，确保 benchmark 结果没有被优化掉。
   benchmark_sink.fetch_xor(
-      static_cast<std::uint64_t>(mutex_nanoseconds +
+      static_cast<u64>(mutex_nanoseconds +
                                  shared_mutex_nanoseconds +
                                  atomic_nanoseconds + atomic_cas_nanoseconds),
       std::memory_order_relaxed);

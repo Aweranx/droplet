@@ -1,4 +1,5 @@
 #include <droplet/socket/address.h>
+#include <droplet/types.h>
 #include <droplet/hook/hook.h>
 #include <droplet/iomanager/iomanager.h>
 #include <droplet/socket/socket.h>
@@ -31,7 +32,7 @@ TEST(TestSocket, TcpSocketRoundTripThroughIOManager) {
   IOManager iom(2, false, "socket-tcp-round-trip");
   iom.start();
 
-  std::promise<uint16_t> port_promise;
+  std::promise<u16> port_promise;
   auto port_future = port_promise.get_future();
   std::promise<bool> server_done;
   auto server_future = server_done.get_future();
@@ -46,7 +47,7 @@ TEST(TestSocket, TcpSocketRoundTripThroughIOManager) {
       auto local = std::dynamic_pointer_cast<droplet::IPv4Address>(
           server->getLocalAddress());
       if (local) {
-        port_promise.set_value(static_cast<uint16_t>(local->getPort()));
+        port_promise.set_value(static_cast<u16>(local->getPort()));
         published = true;
         auto client = server->accept();
         if (client) {
@@ -69,7 +70,7 @@ TEST(TestSocket, TcpSocketRoundTripThroughIOManager) {
   });
 
   ASSERT_EQ(port_future.wait_for(kWait), std::future_status::ready);
-  const uint16_t port = port_future.get();
+  const u16 port = port_future.get();
   ASSERT_NE(port, 0);
 
   const int client = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -129,7 +130,7 @@ TEST(TestSocket, ConnectUsesFiberHookAndTimeoutPath) {
   IOManager iom(1, false, "socket-connect-hook");
   iom.start();
 
-  std::promise<uint16_t> port_promise;
+  std::promise<u16> port_promise;
   auto port_future = port_promise.get_future();
   std::promise<bool> server_promise;
   auto server_future = server_promise.get_future();
@@ -145,7 +146,7 @@ TEST(TestSocket, ConnectUsesFiberHookAndTimeoutPath) {
       auto local = std::dynamic_pointer_cast<droplet::IPv4Address>(
           server->getLocalAddress());
       if (local) {
-        port_promise.set_value(static_cast<uint16_t>(local->getPort()));
+        port_promise.set_value(static_cast<u16>(local->getPort()));
         auto client = server->accept();
         if (client) {
           char value[2]{};
@@ -158,7 +159,7 @@ TEST(TestSocket, ConnectUsesFiberHookAndTimeoutPath) {
   });
 
   ASSERT_EQ(port_future.wait_for(kWait), std::future_status::ready);
-  const uint16_t port = port_future.get();
+  const u16 port = port_future.get();
   ASSERT_NE(port, 0);
   iom.schedule([&, port] {
     auto client = Socket::CreateTCPSocket();

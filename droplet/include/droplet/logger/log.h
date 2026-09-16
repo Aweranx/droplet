@@ -1,5 +1,7 @@
 #pragma once
 
+#include <droplet/types.h>
+
 #include <droplet/logger/appender.h>
 #include <droplet/logger/log_level.h>
 #include <droplet/logger/logger.h>

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <droplet/types.h>
+
 #include <droplet/export.h>
 #include <droplet/fiber/fiber.h>
 #include <droplet/macros.h>
@@ -73,9 +75,9 @@ class DROPLET_API Scheduler {
 
   /// 投递协程任务；thread_id = -1 表示任意线程，否则 pin 到对应线程
   /// （id 取 getThreadIds() 中的值）。
-  void schedule(Fiber::Ptr fiber, int64_t thread_id = -1);
+  void schedule(Fiber::Ptr fiber, i64 thread_id = -1);
   /// 投递函数任务：内部包装为协程执行。
-  void schedule(std::function<void()> cb, int64_t thread_id = -1);
+  void schedule(std::function<void()> cb, i64 thread_id = -1);
 
   /// 批量投递（元素为 Fiber::Ptr 或 std::function<void()>）。
   template <class Iter>
@@ -100,7 +102,7 @@ class DROPLET_API Scheduler {
   }
 
   /// 全部调度线程 id（含 use_caller 时的调用线程），供 schedule 指定线程。
-  [[nodiscard]] const std::vector<uint64_t>& getThreadIds() const noexcept {
+  [[nodiscard]] const std::vector<u64>& getThreadIds() const noexcept {
     return thread_ids_;
   }
 
@@ -109,7 +111,7 @@ class DROPLET_API Scheduler {
   struct ScheduleTask {
     Fiber::Ptr fiber;
     std::function<void()> cb;
-    int64_t thread_id;
+    i64 thread_id;
   };
 
   /// 唤醒空闲线程的钩子；基类空实现（条件变量已负责唤醒），预留给
@@ -138,13 +140,13 @@ class DROPLET_API Scheduler {
   std::latch registered_latch_;   ///< start 等待全部 worker 注册
   std::list<ScheduleTask> tasks_;  ///< 待调度任务
   std::vector<std::thread> threads_;       ///< worker 线程（不含 caller）
-  std::vector<uint64_t> thread_ids_;       ///< 全部调度线程 id
+  std::vector<u64> thread_ids_;       ///< 全部调度线程 id
   
   size_t registered_{0};           ///< 已注册 id 的调度线程数
   bool use_caller_{false};
   bool started_{false};
   std::string name_;
-  uint64_t caller_thread_id_{0};   ///< use_caller 时调用线程的 id
+  u64 caller_thread_id_{0};   ///< use_caller 时调用线程的 id
   std::atomic<bool> stopping_{false};
 
  private:

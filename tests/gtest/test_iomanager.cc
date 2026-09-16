@@ -1,4 +1,5 @@
 #include <droplet/iomanager/iomanager.h>
+#include <droplet/types.h>
 #include <droplet/utils/thread_utils.h>
 
 #include <gtest/gtest.h>
@@ -174,7 +175,7 @@ TEST(TestIOManager, TimerRunsOnSchedulerThread) {
   IOManager iom(2, false, "io-timer");
   iom.start();
 
-  std::promise<uint64_t> completed;
+  std::promise<u64> completed;
   auto future = completed.get_future();
   const auto timer = iom.addTimer(10, [&] {
     completed.set_value(droplet::GetThreadId());

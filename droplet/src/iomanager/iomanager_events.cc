@@ -1,4 +1,5 @@
 #include "droplet/iomanager/iomanager.h"
+#include <droplet/types.h>
 
 #include <sys/epoll.h>
 
@@ -153,7 +154,7 @@ bool IOManager::cancelEvent(int fd, EventMask event) {
 bool IOManager::cancelAll(int fd) { return cancelEvent(fd, kAllEvents); }
 
 bool IOManager::processEvent(const void* epoll_data,
-                             uint32_t epoll_events) {
+                             u32 epoll_events) {
   auto* context = const_cast<FdContext*>(
       static_cast<const FdContext*>(epoll_data));
   if (!context) {

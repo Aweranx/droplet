@@ -1,5 +1,7 @@
 #pragma once
 
+#include <droplet/types.h>
+
 #include <droplet/socket/address.h>
 #include <droplet/export.h>
 #include <droplet/utils/noncopyable.h>
@@ -54,10 +56,10 @@ class DROPLET_API Socket : public std::enable_shared_from_this<Socket>,
   Socket(int family, int type, int protocol = 0);
   virtual ~Socket();
 
-  [[nodiscard]] int64_t getSendTimeout() const;
-  void setSendTimeout(int64_t milliseconds);
-  [[nodiscard]] int64_t getRecvTimeout() const;
-  void setRecvTimeout(int64_t milliseconds);
+  [[nodiscard]] i64 getSendTimeout() const;
+  void setSendTimeout(i64 milliseconds);
+  [[nodiscard]] i64 getRecvTimeout() const;
+  void setRecvTimeout(i64 milliseconds);
 
   bool getOption(int level, int option, void* result, socklen_t* length) const;
   template <class T>
@@ -75,8 +77,8 @@ class DROPLET_API Socket : public std::enable_shared_from_this<Socket>,
   virtual Ptr accept();
   virtual bool bind(const Address::Ptr& address);
   virtual bool connect(const Address::Ptr& address,
-                       uint64_t timeout_ms = UINT64_MAX);
-  virtual bool reconnect(uint64_t timeout_ms = UINT64_MAX);
+                       u64 timeout_ms = UINT64_MAX);
+  virtual bool reconnect(u64 timeout_ms = UINT64_MAX);
   virtual bool listen(int backlog = SOMAXCONN);
   virtual bool close();
 

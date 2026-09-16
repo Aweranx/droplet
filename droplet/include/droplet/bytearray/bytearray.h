@@ -1,5 +1,7 @@
 #pragma once
 
+#include <droplet/types.h>
+
 #include <droplet/export.h>
 
 #include <cstddef>
@@ -45,19 +47,19 @@ class DROPLET_API ByteArray final {
   ByteArray(ByteArray&&) = delete;
   ByteArray& operator=(ByteArray&&) = delete;
 
-  void writeFint8(std::int8_t value);
-  void writeFuint8(std::uint8_t value);
-  void writeFint16(std::int16_t value);
-  void writeFuint16(std::uint16_t value);
-  void writeFint32(std::int32_t value);
-  void writeFuint32(std::uint32_t value);
-  void writeFint64(std::int64_t value);
-  void writeFuint64(std::uint64_t value);
+  void writeFint8(i8 value);
+  void writeFuint8(u8 value);
+  void writeFint16(i16 value);
+  void writeFuint16(u16 value);
+  void writeFint32(i32 value);
+  void writeFuint32(u32 value);
+  void writeFint64(i64 value);
+  void writeFuint64(u64 value);
 
-  void writeInt32(std::int32_t value);
-  void writeUint32(std::uint32_t value);
-  void writeInt64(std::int64_t value);
-  void writeUint64(std::uint64_t value);
+  void writeInt32(i32 value);
+  void writeUint32(u32 value);
+  void writeInt64(i64 value);
+  void writeUint64(u64 value);
 
   void writeFloat(float value);
   void writeDouble(double value);
@@ -68,19 +70,19 @@ class DROPLET_API ByteArray final {
   void writeStringVint(const std::string& value);
   void writeStringWithoutLength(const std::string& value);
 
-  [[nodiscard]] std::int8_t readFint8();
-  [[nodiscard]] std::uint8_t readFuint8();
-  [[nodiscard]] std::int16_t readFint16();
-  [[nodiscard]] std::uint16_t readFuint16();
-  [[nodiscard]] std::int32_t readFint32();
-  [[nodiscard]] std::uint32_t readFuint32();
-  [[nodiscard]] std::int64_t readFint64();
-  [[nodiscard]] std::uint64_t readFuint64();
+  [[nodiscard]] i8 readFint8();
+  [[nodiscard]] u8 readFuint8();
+  [[nodiscard]] i16 readFint16();
+  [[nodiscard]] u16 readFuint16();
+  [[nodiscard]] i32 readFint32();
+  [[nodiscard]] u32 readFuint32();
+  [[nodiscard]] i64 readFint64();
+  [[nodiscard]] u64 readFuint64();
 
-  [[nodiscard]] std::int32_t readInt32();
-  [[nodiscard]] std::uint32_t readUint32();
-  [[nodiscard]] std::int64_t readInt64();
-  [[nodiscard]] std::uint64_t readUint64();
+  [[nodiscard]] i32 readInt32();
+  [[nodiscard]] u32 readUint32();
+  [[nodiscard]] i64 readInt64();
+  [[nodiscard]] u64 readUint64();
 
   [[nodiscard]] float readFloat();
   [[nodiscard]] double readDouble();
@@ -120,16 +122,16 @@ class DROPLET_API ByteArray final {
   [[nodiscard]] std::string toHexString() const;
 
   /** @brief 获取当前可读区域的 scatter/gather 缓冲区。 */
-  [[nodiscard]] std::uint64_t getReadBuffers(
+  [[nodiscard]] u64 getReadBuffers(
       std::vector<iovec>& buffers,
-      std::uint64_t length = UINT64_MAX) const;
+      u64 length = UINT64_MAX) const;
   /** @brief 从指定位置获取可读区域的 scatter/gather 缓冲区。 */
-  [[nodiscard]] std::uint64_t getReadBuffers(
-      std::vector<iovec>& buffers, std::uint64_t length,
-      std::uint64_t position) const;
+  [[nodiscard]] u64 getReadBuffers(
+      std::vector<iovec>& buffers, u64 length,
+      u64 position) const;
   /** @brief 获取当前可写区域的 scatter/gather 缓冲区，并按需扩容。 */
-  [[nodiscard]] std::uint64_t getWriteBuffers(
-      std::vector<iovec>& buffers, std::uint64_t length);
+  [[nodiscard]] u64 getWriteBuffers(
+      std::vector<iovec>& buffers, u64 length);
 
  private:
   template <class T>

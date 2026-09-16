@@ -1,5 +1,7 @@
 #pragma once
 
+#include <droplet/types.h>
+
 #include <droplet/export.h>
 #include <droplet/logger/log.h>
 
@@ -410,20 +412,20 @@ class ConfigVar final : public ConfigVarBase {
    * @brief 添加值变更回调。
    * @return 回调对应的唯一 id，用于删除回调
    */
-  uint64_t addListener(OnChangeCb cb) {
+  u64 addListener(OnChangeCb cb) {
     WriteLock lock(mutex_);
     callbacks_.emplace(next_listener_id_, std::move(cb));
     return next_listener_id_++;
   }
 
   /// 删除指定 id 的变更回调。
-  void delListener(uint64_t key) {
+  void delListener(u64 key) {
     WriteLock lock(mutex_);
     callbacks_.erase(key);
   }
 
   /// 获取指定 id 的回调副本，不存在时返回 nullptr。
-  [[nodiscard]] OnChangeCb getListener(uint64_t key) const {
+  [[nodiscard]] OnChangeCb getListener(u64 key) const {
     ReadLock lock(mutex_);
     auto it = callbacks_.find(key);
     return it == callbacks_.end() ? nullptr : it->second;
@@ -440,9 +442,9 @@ class ConfigVar final : public ConfigVarBase {
   /// 配置值
   T value_;
   /// 值变更回调表，key 为实例内自增的唯一 id
-  std::map<uint64_t, OnChangeCb> callbacks_;
+  std::map<u64, OnChangeCb> callbacks_;
   /// 下一个回调 id
-  uint64_t next_listener_id_{0};
+  u64 next_listener_id_{0};
 };
 
 /**

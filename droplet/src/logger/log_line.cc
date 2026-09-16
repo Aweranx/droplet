@@ -1,4 +1,5 @@
 #include <droplet/logger/log.h>
+#include <droplet/types.h>
 #include <droplet/utils/system_utils.h>
 #include <droplet/utils/thread_utils.h>
 

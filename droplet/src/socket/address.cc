@@ -1,4 +1,5 @@
 #include "droplet/socket/address.h"
+#include <droplet/types.h>
 
 #include <arpa/inet.h>
 #include <ifaddrs.h>
@@ -42,13 +43,13 @@ std::pair<std::string, std::string> SplitHostService(const std::string& host) {
   return {host, {}};
 }
 
-uint32_t CountMaskBits(const uint8_t* data, size_t length) noexcept {
-  uint32_t result = 0;
+u32 CountMaskBits(const u8* data, size_t length) noexcept {
+  u32 result = 0;
   bool zero_seen = false;
   for (size_t i = 0; i < length; ++i) {
-    uint8_t byte = data[i];
+    u8 byte = data[i];
     for (int bit = 7; bit >= 0; --bit) {
-      if (byte & (uint8_t{1} << bit)) {
+      if (byte & (u8{1} << bit)) {
         if (zero_seen) {
           return result;
         }
@@ -148,7 +149,7 @@ std::shared_ptr<IPAddress> Address::LookupAnyIPAddress(const std::string& host,
 }
 
 bool Address::GetInterfaceAddresses(
-    std::multimap<std::string, std::pair<Ptr, uint32_t>>& result, int family) {
+    std::multimap<std::string, std::pair<Ptr, u32>>& result, int family) {
   ifaddrs* interfaces = nullptr;
   if (::getifaddrs(&interfaces) != 0) {
     return false;
@@ -163,12 +164,12 @@ bool Address::GetInterfaceAddresses(
       continue;
     }
     socklen_t length = 0;
-    uint32_t prefix = 0;
+    u32 prefix = 0;
     if (actual_family == AF_INET) {
       length = sizeof(sockaddr_in);
       const auto* mask = reinterpret_cast<const sockaddr_in*>(it->ifa_netmask);
       prefix = CountMaskBits(
-          reinterpret_cast<const uint8_t*>(&mask->sin_addr.s_addr), 4);
+          reinterpret_cast<const u8*>(&mask->sin_addr.s_addr), 4);
     } else if (actual_family == AF_INET6) {
       length = sizeof(sockaddr_in6);
       const auto* mask = reinterpret_cast<const sockaddr_in6*>(it->ifa_netmask);
@@ -186,9 +187,9 @@ bool Address::GetInterfaceAddresses(
 }
 
 bool Address::GetInterfaceAddresses(
-    std::vector<std::pair<Ptr, uint32_t>>& result, const std::string& iface,
+    std::vector<std::pair<Ptr, u32>>& result, const std::string& iface,
     int family) {
-  std::multimap<std::string, std::pair<Ptr, uint32_t>> all;
+  std::multimap<std::string, std::pair<Ptr, u32>> all;
   if (!GetInterfaceAddresses(all, family)) {
     return false;
   }
@@ -226,7 +227,7 @@ std::ostream& operator<<(std::ostream& os, const Address& address) {
   return address.insert(os);
 }
 
-IPAddress::Ptr IPAddress::Create(const char* address, uint16_t port) {
+IPAddress::Ptr IPAddress::Create(const char* address, u16 port) {
   if (!address) {
     return nullptr;
   }
@@ -236,7 +237,7 @@ IPAddress::Ptr IPAddress::Create(const char* address, uint16_t port) {
   return IPv6Address::Create(address, port);
 }
 
-IPv4Address::Ptr IPv4Address::Create(const char* address, uint16_t port) {
+IPv4Address::Ptr IPv4Address::Create(const char* address, u16 port) {
   sockaddr_in value{};
   value.sin_family = AF_INET;
   value.sin_port = htons(port);
@@ -249,7 +250,7 @@ IPv4Address::Ptr IPv4Address::Create(const char* address, uint16_t port) {
 IPv4Address::IPv4Address(const sockaddr_in& address)
     : IPAddress(AF_INET), address_(address) {}
 
-IPv4Address::IPv4Address(uint32_t address, uint16_t port) : IPAddress(AF_INET) {
+IPv4Address::IPv4Address(u32 address, u16 port) : IPAddress(AF_INET) {
   address_.sin_family = AF_INET;
   // The integer constructor follows the public Sylar convention (host-order
   // address); sockaddr_in stores it in network byte order.
@@ -277,33 +278,33 @@ std::ostream& IPv4Address::insert(std::ostream& os) const {
   return os << buffer << ':' << ntohs(address_.sin_port);
 }
 
-IPAddress::Ptr IPv4Address::broadcastAddress(uint32_t prefix_length) const {
+IPAddress::Ptr IPv4Address::broadcastAddress(u32 prefix_length) const {
   if (prefix_length > 32) {
     return nullptr;
   }
-  const uint32_t mask = prefix_length == 0
+  const u32 mask = prefix_length == 0
                             ? 0
                             : 0xffffffffu << (32 - prefix_length);
-  const uint32_t host = ntohl(address_.sin_addr.s_addr);
+  const u32 host = ntohl(address_.sin_addr.s_addr);
   return std::make_shared<IPv4Address>(host | ~mask, getPort());
 }
 
-IPAddress::Ptr IPv4Address::networkAddress(uint32_t prefix_length) const {
+IPAddress::Ptr IPv4Address::networkAddress(u32 prefix_length) const {
   if (prefix_length > 32) {
     return nullptr;
   }
-  const uint32_t mask = prefix_length == 0
+  const u32 mask = prefix_length == 0
                             ? 0
                             : 0xffffffffu << (32 - prefix_length);
-  const uint32_t host = ntohl(address_.sin_addr.s_addr);
+  const u32 host = ntohl(address_.sin_addr.s_addr);
   return std::make_shared<IPv4Address>(host & mask, getPort());
 }
 
-IPAddress::Ptr IPv4Address::subnetMask(uint32_t prefix_length) const {
+IPAddress::Ptr IPv4Address::subnetMask(u32 prefix_length) const {
   if (prefix_length > 32) {
     return nullptr;
   }
-  const uint32_t mask = prefix_length == 0
+  const u32 mask = prefix_length == 0
                             ? 0
                             : 0xffffffffu << (32 - prefix_length);
   sockaddr_in result{};
@@ -312,15 +313,15 @@ IPAddress::Ptr IPv4Address::subnetMask(uint32_t prefix_length) const {
   return std::make_shared<IPv4Address>(result);
 }
 
-uint32_t IPv4Address::getPort() const noexcept {
+u32 IPv4Address::getPort() const noexcept {
   return ntohs(address_.sin_port);
 }
 
-void IPv4Address::setPort(uint16_t port) noexcept {
+void IPv4Address::setPort(u16 port) noexcept {
   address_.sin_port = htons(port);
 }
 
-IPv6Address::Ptr IPv6Address::Create(const char* address, uint16_t port) {
+IPv6Address::Ptr IPv6Address::Create(const char* address, u16 port) {
   sockaddr_in6 value{};
   value.sin6_family = AF_INET6;
   value.sin6_port = htons(port);
@@ -337,7 +338,7 @@ IPv6Address::IPv6Address() : IPAddress(AF_INET6) {
 IPv6Address::IPv6Address(const sockaddr_in6& address)
     : IPAddress(AF_INET6), address_(address) {}
 
-IPv6Address::IPv6Address(const uint8_t address[16], uint16_t port)
+IPv6Address::IPv6Address(const u8 address[16], u16 port)
     : IPAddress(AF_INET6) {
   address_.sin6_family = AF_INET6;
   address_.sin6_port = htons(port);
@@ -364,20 +365,20 @@ std::ostream& IPv6Address::insert(std::ostream& os) const {
   return os << '[' << buffer << ']' << ':' << ntohs(address_.sin6_port);
 }
 
-IPAddress::Ptr IPv6Address::broadcastAddress(uint32_t prefix_length) const {
+IPAddress::Ptr IPv6Address::broadcastAddress(u32 prefix_length) const {
   if (prefix_length > 128) {
     return nullptr;
   }
   auto value = address_.sin6_addr;
   for (size_t i = 0; i < 16; ++i) {
-    const uint32_t bit = static_cast<uint32_t>(i * 8);
+    const u32 bit = static_cast<u32>(i * 8);
     if (bit + 8 <= prefix_length) {
       continue;
     }
     if (bit >= prefix_length) {
       value.s6_addr[i] = 0xff;
     } else {
-      value.s6_addr[i] |= static_cast<uint8_t>(0xffu >> (prefix_length - bit));
+      value.s6_addr[i] |= static_cast<u8>(0xffu >> (prefix_length - bit));
     }
   }
   sockaddr_in6 result = address_;
@@ -385,20 +386,20 @@ IPAddress::Ptr IPv6Address::broadcastAddress(uint32_t prefix_length) const {
   return std::make_shared<IPv6Address>(result);
 }
 
-IPAddress::Ptr IPv6Address::networkAddress(uint32_t prefix_length) const {
+IPAddress::Ptr IPv6Address::networkAddress(u32 prefix_length) const {
   if (prefix_length > 128) {
     return nullptr;
   }
   auto value = address_.sin6_addr;
   for (size_t i = 0; i < 16; ++i) {
-    const uint32_t bit = static_cast<uint32_t>(i * 8);
+    const u32 bit = static_cast<u32>(i * 8);
     if (bit + 8 <= prefix_length) {
       continue;
     }
     if (bit >= prefix_length) {
       value.s6_addr[i] = 0;
     } else {
-      value.s6_addr[i] &= static_cast<uint8_t>(0xffu << (8 - (prefix_length - bit)));
+      value.s6_addr[i] &= static_cast<u8>(0xffu << (8 - (prefix_length - bit)));
     }
   }
   sockaddr_in6 result = address_;
@@ -406,27 +407,27 @@ IPAddress::Ptr IPv6Address::networkAddress(uint32_t prefix_length) const {
   return std::make_shared<IPv6Address>(result);
 }
 
-IPAddress::Ptr IPv6Address::subnetMask(uint32_t prefix_length) const {
+IPAddress::Ptr IPv6Address::subnetMask(u32 prefix_length) const {
   if (prefix_length > 128) {
     return nullptr;
   }
-  std::array<uint8_t, 16> mask{};
+  std::array<u8, 16> mask{};
   for (size_t i = 0; i < 16; ++i) {
-    const uint32_t bit = static_cast<uint32_t>(i * 8);
+    const u32 bit = static_cast<u32>(i * 8);
     if (bit + 8 <= prefix_length) {
       mask[i] = 0xff;
     } else if (bit < prefix_length) {
-      mask[i] = static_cast<uint8_t>(0xffu << (8 - (prefix_length - bit)));
+      mask[i] = static_cast<u8>(0xffu << (8 - (prefix_length - bit)));
     }
   }
   return std::make_shared<IPv6Address>(mask.data(), 0);
 }
 
-uint32_t IPv6Address::getPort() const noexcept {
+u32 IPv6Address::getPort() const noexcept {
   return ntohs(address_.sin6_port);
 }
 
-void IPv6Address::setPort(uint16_t port) noexcept {
+void IPv6Address::setPort(u16 port) noexcept {
   address_.sin6_port = htons(port);
 }
 

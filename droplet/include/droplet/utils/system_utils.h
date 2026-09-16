@@ -2,6 +2,7 @@
 
 #include <droplet/export.h>
 #include <droplet/macros.h>
+#include <droplet/types.h>
 
 #include <chrono>
 
@@ -11,5 +12,8 @@ namespace droplet {
 GetElapsedTime() noexcept;
 
 [[nodiscard]] DROPLET_API u64 GetFiberId() noexcept;
+
+[[nodiscard]] DROPLET_API std::string GetBacktrace(
+    int size = 20, int skip = 1, const std::string& prefix = "");
 
 }  // namespace droplet

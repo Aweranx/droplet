@@ -1,4 +1,5 @@
 #include <droplet/socket/address.h>
+#include <droplet/types.h>
 
 #include <gtest/gtest.h>
 
@@ -139,7 +140,7 @@ TEST(AddressTest, CreateAndLookupHostAddresses) {
 }
 
 TEST(AddressTest, InterfaceAddressesExposePrefixLength) {
-  std::multimap<std::string, std::pair<Address::Ptr, uint32_t>> all;
+  std::multimap<std::string, std::pair<Address::Ptr, u32>> all;
   ASSERT_TRUE(Address::GetInterfaceAddresses(all, AF_INET));
   if (all.empty()) {
     GTEST_SKIP() << "the test environment has no IPv4 interface";
@@ -152,7 +153,7 @@ TEST(AddressTest, InterfaceAddressesExposePrefixLength) {
     EXPECT_FALSE(name.empty());
   }
 
-  std::vector<std::pair<Address::Ptr, uint32_t>> loopback;
+  std::vector<std::pair<Address::Ptr, u32>> loopback;
   if (Address::GetInterfaceAddresses(loopback, "lo", AF_INET)) {
     ASSERT_FALSE(loopback.empty());
     EXPECT_EQ(loopback.front().first->toString(), "127.0.0.1:0");

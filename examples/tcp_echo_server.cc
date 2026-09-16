@@ -1,4 +1,5 @@
 #include <droplet/iomanager/iomanager.h>
+#include <droplet/types.h>
 #include <droplet/socket/address.h>
 #include <droplet/stream/socket_stream.h>
 #include <droplet/tcpserver/tcp_server.h>
@@ -38,7 +39,7 @@ class EchoServer final : public droplet::TcpServer {
   }
 };
 
-bool ParsePort(std::string_view text, uint16_t& port) {
+bool ParsePort(std::string_view text, u16& port) {
   unsigned value = 0;
   const auto [end, error] =
       std::from_chars(text.data(), text.data() + text.size(), value);
@@ -46,14 +47,14 @@ bool ParsePort(std::string_view text, uint16_t& port) {
       value > 65535) {
     return false;
   }
-  port = static_cast<uint16_t>(value);
+  port = static_cast<u16>(value);
   return true;
 }
 
 }  // namespace
 
 int main(int argc, char** argv) {
-  uint16_t port = 8080;
+  u16 port = 8080;
   if (argc > 2 || (argc == 2 && !ParsePort(argv[1], port))) {
     std::println(stderr, "usage: {} [port]", argv[0]);
     return 1;

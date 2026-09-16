@@ -1,5 +1,7 @@
 #pragma once
 
+#include <droplet/types.h>
+
 #include <droplet/export.h>
 #include <droplet/iomanager/iomanager.h>
 #include <droplet/socket/address.h>
@@ -27,7 +29,7 @@ class DROPLET_API TcpServer : public std::enable_shared_from_this<TcpServer>,
  public:
   using Ptr = std::shared_ptr<TcpServer>;
 
-  static constexpr uint64_t kDefaultRecvTimeoutMs = 120'000;
+  static constexpr u64 kDefaultRecvTimeoutMs = 120'000;
 
   explicit TcpServer(IOManager* worker = IOManager::GetThis(),
                      IOManager* io_worker = IOManager::GetThis(),
@@ -55,10 +57,10 @@ class DROPLET_API TcpServer : public std::enable_shared_from_this<TcpServer>,
    */
   virtual void stop();
 
-  [[nodiscard]] uint64_t getRecvTimeout() const noexcept {
+  [[nodiscard]] u64 getRecvTimeout() const noexcept {
     return recv_timeout_ms_.load(std::memory_order_acquire);
   }
-  void setRecvTimeout(uint64_t milliseconds) noexcept {
+  void setRecvTimeout(u64 milliseconds) noexcept {
     recv_timeout_ms_.store(milliseconds, std::memory_order_release);
   }
 
@@ -105,7 +107,7 @@ class DROPLET_API TcpServer : public std::enable_shared_from_this<TcpServer>,
   std::vector<Socket::Ptr> listeners_;
   std::string name_{"droplet/0.1.0"};
   std::string type_{"tcp"};
-  std::atomic<uint64_t> recv_timeout_ms_{kDefaultRecvTimeoutMs};
+  std::atomic<u64> recv_timeout_ms_{kDefaultRecvTimeoutMs};
   std::atomic<bool> stopped_{true};
 };
 

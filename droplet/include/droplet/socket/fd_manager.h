@@ -1,5 +1,7 @@
 #pragma once
 
+#include <droplet/types.h>
+
 #include <droplet/export.h>
 #include <droplet/utils/singleton.h>
 
@@ -53,8 +55,8 @@ class DROPLET_API FdCtx final : public std::enable_shared_from_this<FdCtx> {
     return sys_nonblock_.load(std::memory_order_acquire);
   }
 
-  void setTimeout(int option, uint64_t milliseconds) noexcept;
-  [[nodiscard]] uint64_t getTimeout(int option) const noexcept;
+  void setTimeout(int option, u64 milliseconds) noexcept;
+  [[nodiscard]] u64 getTimeout(int option) const noexcept;
 
   void markClosed() noexcept {
     closed_.store(true, std::memory_order_release);
@@ -69,8 +71,8 @@ class DROPLET_API FdCtx final : public std::enable_shared_from_this<FdCtx> {
   std::atomic<bool> sys_nonblock_{false};
   std::atomic<bool> user_nonblock_{false};
   std::atomic<bool> closed_{false};
-  std::atomic<uint64_t> recv_timeout_{UINT64_MAX};
-  std::atomic<uint64_t> send_timeout_{UINT64_MAX};
+  std::atomic<u64> recv_timeout_{UINT64_MAX};
+  std::atomic<u64> send_timeout_{UINT64_MAX};
 };
 
 /** @brief 进程级 fd 上下文表，供 hook 和 Socket 共享。 */

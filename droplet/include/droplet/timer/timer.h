@@ -1,5 +1,7 @@
 #pragma once
 
+#include <droplet/types.h>
+
 #include <droplet/export.h>
 
 #include <atomic>
@@ -30,9 +32,9 @@ class DROPLET_API Timer final
   /// 从当前时间重新开始计时。
   bool refresh();
   /// 修改间隔；from_now 为 true 时从当前时间重新计算起点。
-  bool reset(uint64_t ms, bool from_now);
+  bool reset(u64 ms, bool from_now);
 
-  [[nodiscard]] uint64_t getMs() const noexcept {
+  [[nodiscard]] u64 getMs() const noexcept {
     return ms_.load(std::memory_order_acquire);
   }
   [[nodiscard]] bool isRecurring() const noexcept { return recurring_; }
@@ -40,8 +42,8 @@ class DROPLET_API Timer final
  private:
   friend class TimerManager;
 
-  Timer(TimerManager* manager, uint64_t ms, std::function<void()> cb,
-        bool recurring, uint64_t next, uint64_t sequence)
+  Timer(TimerManager* manager, u64 ms, std::function<void()> cb,
+        bool recurring, u64 next, u64 sequence)
       : manager_(manager),
         ms_(ms),
         next_(next),
@@ -50,9 +52,9 @@ class DROPLET_API Timer final
         cb_(std::move(cb)) {}
 
   std::atomic<TimerManager*> manager_;
-  std::atomic<uint64_t> ms_;
-  uint64_t next_;
-  uint64_t sequence_;
+  std::atomic<u64> ms_;
+  u64 next_;
+  u64 sequence_;
   bool recurring_;
   std::atomic<bool> canceled_{false};
   std::function<void()> cb_;
@@ -72,16 +74,16 @@ class DROPLET_API TimerManager {
   virtual ~TimerManager();
 
   /// 添加定时器。ms 可以为 0，表示下一次调度循环尽快执行。
-  [[nodiscard]] TimerPtr addTimer(uint64_t ms, std::function<void()> cb,
+  [[nodiscard]] TimerPtr addTimer(u64 ms, std::function<void()> cb,
                                   bool recurring = false);
 
   /// 只有 condition 仍然存活时才执行回调。
   [[nodiscard]] TimerPtr addConditionTimer(
-      uint64_t ms, std::function<void()> cb, std::weak_ptr<void> condition,
+      u64 ms, std::function<void()> cb, std::weak_ptr<void> condition,
       bool recurring = false);
 
   /// 距离最近定时器到期的毫秒数；没有定时器返回 UINT64_MAX。
-  [[nodiscard]] uint64_t getNextTimer() const;
+  [[nodiscard]] u64 getNextTimer() const;
 
   /// 把已经到期的回调追加到 cbs；回调在锁外执行。
   void listExpiredCallbacks(std::vector<std::function<void()>>& cbs);
@@ -113,11 +115,11 @@ class DROPLET_API TimerManager {
 
   bool cancelTimer(Timer& timer);
   bool refreshTimer(Timer& timer);
-  bool resetTimer(Timer& timer, uint64_t ms, bool from_now);
+  bool resetTimer(Timer& timer, u64 ms, bool from_now);
 
   mutable std::mutex timer_mutex_;
   std::set<TimerPtr, TimerComparator> timers_;
-  uint64_t next_sequence_{0};
+  u64 next_sequence_{0};
 };
 
 }  // namespace droplet

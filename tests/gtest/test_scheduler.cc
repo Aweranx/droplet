@@ -1,4 +1,5 @@
 #include <droplet/fiber/fiber.h>
+#include <droplet/types.h>
 #include <droplet/scheduler/scheduler.h>
 #include <droplet/utils/thread_utils.h>
 #include <gtest/gtest.h>
@@ -136,9 +137,9 @@ TEST(TestScheduler, pinned_thread_execution) {
   const auto& ids = sc.getThreadIds();
   ASSERT_EQ(ids.size(), 3u);
 
-  std::atomic<uint64_t> ran_on{0};
+  std::atomic<u64> ran_on{0};
   sc.schedule([&ran_on] { ran_on = GetThreadId(); },
-              static_cast<int64_t>(ids[0]));
+              static_cast<i64>(ids[0]));
   sc.stop();
   EXPECT_EQ(ran_on.load(), ids[0]);
 }
@@ -147,11 +148,11 @@ TEST(TestScheduler, caller_thread_is_registered) {
   // use_caller 时调用线程在 thread_ids 表里，可被 pin。
   const auto caller_tid = GetThreadId();
   Scheduler sc(2, true, "s-caller-pin");
-  std::atomic<uint64_t> ran_on{0};
+  std::atomic<u64> ran_on{0};
   std::atomic<bool> first_ran{false};
   sc.schedule([&first_ran] { first_ran = true; });
   sc.schedule([&ran_on] { ran_on = GetThreadId(); },
-              static_cast<int64_t>(caller_tid));
+              static_cast<i64>(caller_tid));
 
   std::thread stopper([&sc, &first_ran] {
     while (!first_ran.load()) {

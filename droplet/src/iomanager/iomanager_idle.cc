@@ -1,4 +1,5 @@
 #include "droplet/iomanager/iomanager.h"
+#include <droplet/types.h>
 
 #include <sys/epoll.h>
 #include <unistd.h>
@@ -11,7 +12,7 @@
 namespace droplet {
 
 void IOManager::drainTickle() noexcept {
-  uint64_t value = 0;
+  u64 value = 0;
   while (::read(tickle_fd_, &value, sizeof(value)) == -1 && errno == EINTR) {
   }
 }
@@ -20,10 +21,10 @@ void IOManager::idle() {
   std::array<epoll_event, kMaxEpollEvents> events{};
 
   while (true) {
-    const uint64_t next_timer = getNextTimer();
+    const u64 next_timer = getNextTimer();
     int timeout = -1;
-    if (next_timer != std::numeric_limits<uint64_t>::max()) {
-      timeout = next_timer > static_cast<uint64_t>(INT_MAX)
+    if (next_timer != std::numeric_limits<u64>::max()) {
+      timeout = next_timer > static_cast<u64>(INT_MAX)
                     ? INT_MAX
                     : static_cast<int>(next_timer);
     }
@@ -75,7 +76,7 @@ void IOManager::tickle() {
   }
   // 普通投递唤醒一个 worker；stop() 已经先设置 stopping_，此时写入
   // 一个 token 给每个可能阻塞在 epoll_wait 的调度线程。
-  const uint64_t value = Scheduler::stopping() ? wake_count_ : 1;
+  const u64 value = Scheduler::stopping() ? wake_count_ : 1;
   const ssize_t result = ::write(tickle_fd_, &value, sizeof(value));
   if (result < 0 && errno != EAGAIN && errno != EINTR) {
     // 唤醒是尽力而为；eventfd 已有计数时 EAGAIN 不影响正确性。

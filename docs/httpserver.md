@@ -1,0 +1,2 @@
+## pipeline
+httpsession继承自SocketStream，使用SocketStream的接口来接收httprequest，然后在recvRequest用httpparser解析request，然后返回HttpRequest指针。再Servlet给出response后使用sendResponse序列化response发送出去。

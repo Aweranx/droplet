@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <droplet/types.h>
 #include <array>
 #include <cstring>
 #include <functional>

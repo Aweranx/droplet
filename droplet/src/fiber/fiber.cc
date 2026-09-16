@@ -1,4 +1,5 @@
 #include "droplet/fiber/fiber.h"
+#include <droplet/types.h>
 
 #include "fcontext/fcontext.hpp"
 
@@ -15,8 +16,8 @@ namespace droplet {
 
 namespace {
 
-std::atomic<uint64_t> s_fiber_id{0};
-std::atomic<uint64_t> s_fiber_count{0};
+std::atomic<u64> s_fiber_id{0};
+std::atomic<u64> s_fiber_count{0};
 
 // 线程的"当前协程"：t_cur 提供无开销访问；t_cur_holder 维持其存活，
 // 保证协程执行期间哪怕外部引用全部消失，栈和对象也不会被回收。
@@ -24,12 +25,12 @@ thread_local Fiber* t_cur = nullptr;
 thread_local Fiber::Ptr t_cur_holder = nullptr;
 
 // 栈对齐：SysV ABI 要求 16 字节，取 64 覆盖更多平台的栈对齐要求。
-constexpr uint32_t kStackAlign = 64;
+constexpr u32 kStackAlign = 64;
 
 // 协程栈大小配置项：与 sylar 相同的键名，可在 YAML 里通过
 // fiber.stack_size 热更新，之后新建的协程即使用新栈大小。
 auto g_fiber_stack_size =
-    Config::Lookup<uint32_t>("fiber.stack_size", Fiber::kDefaultStackSize,
+    Config::Lookup<u32>("fiber.stack_size", Fiber::kDefaultStackSize,
                              "fiber stack size");
 
 }  // namespace
@@ -46,11 +47,11 @@ Fiber::Fiber() {
   DROPLET_LOG_DEBUG(GetRootLogger()) << "Fiber 主协程创建";
 }
 
-Fiber::Fiber(std::function<void()> cb, uint32_t stack_size)
+Fiber::Fiber(std::function<void()> cb, u32 stack_size)
     : id_(++s_fiber_id), cb_(std::move(cb)) {
   ++s_fiber_count;
 
-  uint32_t size = stack_size ? stack_size
+  u32 size = stack_size ? stack_size
                              : (g_fiber_stack_size ? g_fiber_stack_size->getValue()
                                                    : kDefaultStackSize);
   if (size < kMinStackSize) {
@@ -90,7 +91,7 @@ Fiber::~Fiber() {
 // 创建 / 重置
 // ---------------------------------------------------------------------------
 
-Fiber::Ptr Fiber::Create(std::function<void()> cb, uint32_t stack_size) {
+Fiber::Ptr Fiber::Create(std::function<void()> cb, u32 stack_size) {
   // 强制经由 shared_ptr 持有：resume/entry 依赖 shared_from_this。
   return Ptr(new Fiber(std::move(cb), stack_size));
 }
@@ -167,9 +168,9 @@ Fiber::Ptr Fiber::GetThis() {
   return t_cur_holder;
 }
 
-uint64_t Fiber::GetFiberId() { return t_cur ? t_cur->id_ : 0; }
+u64 Fiber::GetFiberId() { return t_cur ? t_cur->id_ : 0; }
 
-uint64_t Fiber::TotalFibers() { return s_fiber_count.load(std::memory_order_relaxed); }
+u64 Fiber::TotalFibers() { return s_fiber_count.load(std::memory_order_relaxed); }
 
 // ---------------------------------------------------------------------------
 // 协程体执行

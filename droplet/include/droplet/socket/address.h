@@ -1,5 +1,7 @@
 #pragma once
 
+#include <droplet/types.h>
+
 #include <droplet/export.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -40,10 +42,10 @@ class DROPLET_API Address {
 
   // 获取本机所有网卡地址。
   static bool GetInterfaceAddresses(
-      std::multimap<std::string, std::pair<Ptr, uint32_t>>& result,
+      std::multimap<std::string, std::pair<Ptr, u32>>& result,
       int family = AF_INET);
   static bool GetInterfaceAddresses(
-      std::vector<std::pair<Ptr, uint32_t>>& result, const std::string& iface,
+      std::vector<std::pair<Ptr, u32>>& result, const std::string& iface,
       int family = AF_INET);
 
   virtual ~Address() = default;
@@ -75,15 +77,15 @@ class DROPLET_API IPAddress : public Address {
   using Ptr = std::shared_ptr<IPAddress>;
   using ptr = Ptr;
 
-  static Ptr Create(const char* address, uint16_t port = 0);
+  static Ptr Create(const char* address, u16 port = 0);
 
-  virtual Ptr broadcastAddress(uint32_t prefix_length) const = 0;
-  virtual Ptr networkAddress(uint32_t prefix_length) const = 0;
+  virtual Ptr broadcastAddress(u32 prefix_length) const = 0;
+  virtual Ptr networkAddress(u32 prefix_length) const = 0;
 
-  virtual Ptr subnetMask(uint32_t prefix_length) const = 0;
+  virtual Ptr subnetMask(u32 prefix_length) const = 0;
 
-  [[nodiscard]] virtual uint32_t getPort() const noexcept = 0;
-  virtual void setPort(uint16_t port) noexcept = 0;
+  [[nodiscard]] virtual u32 getPort() const noexcept = 0;
+  virtual void setPort(u16 port) noexcept = 0;
 
  protected:
   explicit IPAddress(int family) : Address(family) {}
@@ -95,10 +97,10 @@ class DROPLET_API IPv4Address final : public IPAddress {
   using Ptr = std::shared_ptr<IPv4Address>;
   using ptr = Ptr;
 
-  static Ptr Create(const char* address, uint16_t port = 0);
+  static Ptr Create(const char* address, u16 port = 0);
 
   explicit IPv4Address(const sockaddr_in& address);
-  explicit IPv4Address(uint32_t address = INADDR_ANY, uint16_t port = 0);
+  explicit IPv4Address(u32 address = INADDR_ANY, u16 port = 0);
 
   [[nodiscard]] const sockaddr* getAddr() const noexcept override;
   [[nodiscard]] sockaddr* getAddr() noexcept override;
@@ -106,13 +108,13 @@ class DROPLET_API IPv4Address final : public IPAddress {
   std::ostream& insert(std::ostream& os) const override;
 
   [[nodiscard]] IPAddress::Ptr broadcastAddress(
-      uint32_t prefix_length) const override;
+      u32 prefix_length) const override;
   [[nodiscard]] IPAddress::Ptr networkAddress(
-      uint32_t prefix_length) const override;
+      u32 prefix_length) const override;
   [[nodiscard]] IPAddress::Ptr subnetMask(
-      uint32_t prefix_length) const override;
-  [[nodiscard]] uint32_t getPort() const noexcept override;
-  void setPort(uint16_t port) noexcept override;
+      u32 prefix_length) const override;
+  [[nodiscard]] u32 getPort() const noexcept override;
+  void setPort(u16 port) noexcept override;
 
  private:
   sockaddr_in address_{};
@@ -124,11 +126,11 @@ class DROPLET_API IPv6Address final : public IPAddress {
   using Ptr = std::shared_ptr<IPv6Address>;
   using ptr = Ptr;
 
-  static Ptr Create(const char* address, uint16_t port = 0);
+  static Ptr Create(const char* address, u16 port = 0);
 
   IPv6Address();
   explicit IPv6Address(const sockaddr_in6& address);
-  IPv6Address(const uint8_t address[16], uint16_t port = 0);
+  IPv6Address(const u8 address[16], u16 port = 0);
 
   [[nodiscard]] const sockaddr* getAddr() const noexcept override;
   [[nodiscard]] sockaddr* getAddr() noexcept override;
@@ -136,13 +138,13 @@ class DROPLET_API IPv6Address final : public IPAddress {
   std::ostream& insert(std::ostream& os) const override;
 
   [[nodiscard]] IPAddress::Ptr broadcastAddress(
-      uint32_t prefix_length) const override;
+      u32 prefix_length) const override;
   [[nodiscard]] IPAddress::Ptr networkAddress(
-      uint32_t prefix_length) const override;
+      u32 prefix_length) const override;
   [[nodiscard]] IPAddress::Ptr subnetMask(
-      uint32_t prefix_length) const override;
-  [[nodiscard]] uint32_t getPort() const noexcept override;
-  void setPort(uint16_t port) noexcept override;
+      u32 prefix_length) const override;
+  [[nodiscard]] u32 getPort() const noexcept override;
+  void setPort(u16 port) noexcept override;
 
  private:
   sockaddr_in6 address_{};

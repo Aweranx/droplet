@@ -1,4 +1,5 @@
 #include "droplet/bytearray/bytearray.h"
+#include <droplet/types.h>
 
 #include <algorithm>
 #include <array>
@@ -16,27 +17,27 @@ namespace droplet {
 
 namespace {
 
-std::uint32_t EncodeZigzag32(std::int32_t value) noexcept {
-  return (static_cast<std::uint32_t>(value) << 1) ^
-         static_cast<std::uint32_t>(-(value < 0));
+u32 EncodeZigzag32(i32 value) noexcept {
+  return (static_cast<u32>(value) << 1) ^
+         static_cast<u32>(-(value < 0));
 }
 
-std::uint64_t EncodeZigzag64(std::int64_t value) noexcept {
-  return (static_cast<std::uint64_t>(value) << 1) ^
-         static_cast<std::uint64_t>(-(value < 0));
+u64 EncodeZigzag64(i64 value) noexcept {
+  return (static_cast<u64>(value) << 1) ^
+         static_cast<u64>(-(value < 0));
 }
 
-std::int32_t DecodeZigzag32(std::uint32_t value) noexcept {
+i32 DecodeZigzag32(u32 value) noexcept {
   const auto bits = (value >> 1) ^ (0u - (value & 1u));
-  return std::bit_cast<std::int32_t>(bits);
+  return std::bit_cast<i32>(bits);
 }
 
-std::int64_t DecodeZigzag64(std::uint64_t value) noexcept {
+i64 DecodeZigzag64(u64 value) noexcept {
   const auto bits = (value >> 1) ^ (0ull - (value & 1ull));
-  return std::bit_cast<std::int64_t>(bits);
+  return std::bit_cast<i64>(bits);
 }
 
-std::size_t CheckedSize(std::uint64_t value) {
+std::size_t CheckedSize(u64 value) {
   if (value > std::numeric_limits<std::size_t>::max()) {
     throw std::length_error("ByteArray length does not fit in size_t");
   }
@@ -81,12 +82,12 @@ void ByteArray::writeFixed(T value) {
 
   Unsigned bits{};
   std::memcpy(&bits, &value, sizeof(value));
-  std::array<std::uint8_t, sizeof(T)> bytes{};
+  std::array<u8, sizeof(T)> bytes{};
   for (std::size_t i = 0; i < sizeof(T); ++i) {
     const std::size_t shift = little_endian_
                                   ? i * 8
                                   : (sizeof(T) - 1 - i) * 8;
-    bytes[i] = static_cast<std::uint8_t>(bits >> shift);
+    bytes[i] = static_cast<u8>(bits >> shift);
   }
   write(bytes.data(), bytes.size());
 }
@@ -96,7 +97,7 @@ T ByteArray::readFixed() {
   static_assert(std::is_integral_v<T>);
   using Unsigned = std::make_unsigned_t<T>;
 
-  std::array<std::uint8_t, sizeof(T)> bytes{};
+  std::array<u8, sizeof(T)> bytes{};
   read(bytes.data(), bytes.size());
 
   Unsigned bits{};
@@ -112,83 +113,83 @@ T ByteArray::readFixed() {
   return value;
 }
 
-void ByteArray::writeFint8(std::int8_t value) { writeFixed(value); }
+void ByteArray::writeFint8(i8 value) { writeFixed(value); }
 
-void ByteArray::writeFuint8(std::uint8_t value) { writeFixed(value); }
+void ByteArray::writeFuint8(u8 value) { writeFixed(value); }
 
-void ByteArray::writeFint16(std::int16_t value) { writeFixed(value); }
+void ByteArray::writeFint16(i16 value) { writeFixed(value); }
 
-void ByteArray::writeFuint16(std::uint16_t value) { writeFixed(value); }
+void ByteArray::writeFuint16(u16 value) { writeFixed(value); }
 
-void ByteArray::writeFint32(std::int32_t value) { writeFixed(value); }
+void ByteArray::writeFint32(i32 value) { writeFixed(value); }
 
-void ByteArray::writeFuint32(std::uint32_t value) { writeFixed(value); }
+void ByteArray::writeFuint32(u32 value) { writeFixed(value); }
 
-void ByteArray::writeFint64(std::int64_t value) { writeFixed(value); }
+void ByteArray::writeFint64(i64 value) { writeFixed(value); }
 
-void ByteArray::writeFuint64(std::uint64_t value) { writeFixed(value); }
+void ByteArray::writeFuint64(u64 value) { writeFixed(value); }
 
-void ByteArray::writeInt32(std::int32_t value) {
+void ByteArray::writeInt32(i32 value) {
   writeUint32(EncodeZigzag32(value));
 }
 
-void ByteArray::writeUint32(std::uint32_t value) {
-  std::array<std::uint8_t, 5> bytes{};
+void ByteArray::writeUint32(u32 value) {
+  std::array<u8, 5> bytes{};
   std::size_t count = 0;
   while (value >= 0x80u) {
-    bytes[count++] = static_cast<std::uint8_t>((value & 0x7fu) | 0x80u);
+    bytes[count++] = static_cast<u8>((value & 0x7fu) | 0x80u);
     value >>= 7;
   }
-  bytes[count++] = static_cast<std::uint8_t>(value);
+  bytes[count++] = static_cast<u8>(value);
   write(bytes.data(), count);
 }
 
-void ByteArray::writeInt64(std::int64_t value) {
+void ByteArray::writeInt64(i64 value) {
   writeUint64(EncodeZigzag64(value));
 }
 
-void ByteArray::writeUint64(std::uint64_t value) {
-  std::array<std::uint8_t, 10> bytes{};
+void ByteArray::writeUint64(u64 value) {
+  std::array<u8, 10> bytes{};
   std::size_t count = 0;
   while (value >= 0x80u) {
-    bytes[count++] = static_cast<std::uint8_t>((value & 0x7fu) | 0x80u);
+    bytes[count++] = static_cast<u8>((value & 0x7fu) | 0x80u);
     value >>= 7;
   }
-  bytes[count++] = static_cast<std::uint8_t>(value);
+  bytes[count++] = static_cast<u8>(value);
   write(bytes.data(), count);
 }
 
 void ByteArray::writeFloat(float value) {
-  writeFuint32(std::bit_cast<std::uint32_t>(value));
+  writeFuint32(std::bit_cast<u32>(value));
 }
 
 void ByteArray::writeDouble(double value) {
-  writeFuint64(std::bit_cast<std::uint64_t>(value));
+  writeFuint64(std::bit_cast<u64>(value));
 }
 
 void ByteArray::writeStringF16(const std::string& value) {
-  if (value.size() > std::numeric_limits<std::uint16_t>::max()) {
+  if (value.size() > std::numeric_limits<u16>::max()) {
     throw std::length_error("string is too long for a uint16 length");
   }
-  writeFuint16(static_cast<std::uint16_t>(value.size()));
+  writeFuint16(static_cast<u16>(value.size()));
   write(value.data(), value.size());
 }
 
 void ByteArray::writeStringF32(const std::string& value) {
-  if (value.size() > std::numeric_limits<std::uint32_t>::max()) {
+  if (value.size() > std::numeric_limits<u32>::max()) {
     throw std::length_error("string is too long for a uint32 length");
   }
-  writeFuint32(static_cast<std::uint32_t>(value.size()));
+  writeFuint32(static_cast<u32>(value.size()));
   write(value.data(), value.size());
 }
 
 void ByteArray::writeStringF64(const std::string& value) {
-  writeFuint64(static_cast<std::uint64_t>(value.size()));
+  writeFuint64(static_cast<u64>(value.size()));
   write(value.data(), value.size());
 }
 
 void ByteArray::writeStringVint(const std::string& value) {
-  writeUint64(static_cast<std::uint64_t>(value.size()));
+  writeUint64(static_cast<u64>(value.size()));
   write(value.data(), value.size());
 }
 
@@ -196,34 +197,34 @@ void ByteArray::writeStringWithoutLength(const std::string& value) {
   write(value.data(), value.size());
 }
 
-std::int8_t ByteArray::readFint8() { return readFixed<std::int8_t>(); }
+i8 ByteArray::readFint8() { return readFixed<i8>(); }
 
-std::uint8_t ByteArray::readFuint8() { return readFixed<std::uint8_t>(); }
+u8 ByteArray::readFuint8() { return readFixed<u8>(); }
 
-std::int16_t ByteArray::readFint16() { return readFixed<std::int16_t>(); }
+i16 ByteArray::readFint16() { return readFixed<i16>(); }
 
-std::uint16_t ByteArray::readFuint16() { return readFixed<std::uint16_t>(); }
+u16 ByteArray::readFuint16() { return readFixed<u16>(); }
 
-std::int32_t ByteArray::readFint32() { return readFixed<std::int32_t>(); }
+i32 ByteArray::readFint32() { return readFixed<i32>(); }
 
-std::uint32_t ByteArray::readFuint32() { return readFixed<std::uint32_t>(); }
+u32 ByteArray::readFuint32() { return readFixed<u32>(); }
 
-std::int64_t ByteArray::readFint64() { return readFixed<std::int64_t>(); }
+i64 ByteArray::readFint64() { return readFixed<i64>(); }
 
-std::uint64_t ByteArray::readFuint64() { return readFixed<std::uint64_t>(); }
+u64 ByteArray::readFuint64() { return readFixed<u64>(); }
 
-std::int32_t ByteArray::readInt32() {
+i32 ByteArray::readInt32() {
   return DecodeZigzag32(readUint32());
 }
 
-std::uint32_t ByteArray::readUint32() {
-  std::uint32_t result = 0;
+u32 ByteArray::readUint32() {
+  u32 result = 0;
   for (std::size_t index = 0; index < 5; ++index) {
-    const std::uint8_t byte = readFuint8();
+    const u8 byte = readFuint8();
     if (index == 4 && byte > 0x0fu) {
       throw std::out_of_range("invalid uint32 varint");
     }
-    result |= static_cast<std::uint32_t>(byte & 0x7fu) << (index * 7);
+    result |= static_cast<u32>(byte & 0x7fu) << (index * 7);
     if ((byte & 0x80u) == 0) {
       return result;
     }
@@ -231,18 +232,18 @@ std::uint32_t ByteArray::readUint32() {
   throw std::out_of_range("invalid uint32 varint");
 }
 
-std::int64_t ByteArray::readInt64() {
+i64 ByteArray::readInt64() {
   return DecodeZigzag64(readUint64());
 }
 
-std::uint64_t ByteArray::readUint64() {
-  std::uint64_t result = 0;
+u64 ByteArray::readUint64() {
+  u64 result = 0;
   for (std::size_t index = 0; index < 10; ++index) {
-    const std::uint8_t byte = readFuint8();
+    const u8 byte = readFuint8();
     if (index == 9 && byte > 0x01u) {
       throw std::out_of_range("invalid uint64 varint");
     }
-    result |= static_cast<std::uint64_t>(byte & 0x7fu) << (index * 7);
+    result |= static_cast<u64>(byte & 0x7fu) << (index * 7);
     if ((byte & 0x80u) == 0) {
       return result;
     }
@@ -521,15 +522,15 @@ std::string ByteArray::toHexString() const {
       output << '\n';
     }
     output << std::setw(2) << std::setfill('0') << std::hex
-           << static_cast<unsigned>(static_cast<std::uint8_t>(value[index]))
+           << static_cast<unsigned>(static_cast<u8>(value[index]))
            << ' ';
   }
   return output.str();
 }
 
-std::uint64_t ByteArray::getReadBuffers(std::vector<iovec>& buffers,
-                                        std::uint64_t length) const {
-  const auto readable = static_cast<std::uint64_t>(getReadSize());
+u64 ByteArray::getReadBuffers(std::vector<iovec>& buffers,
+                                        u64 length) const {
+  const auto readable = static_cast<u64>(getReadSize());
   length = std::min(length, readable);
   if (length == 0) {
     return 0;
@@ -537,10 +538,10 @@ std::uint64_t ByteArray::getReadBuffers(std::vector<iovec>& buffers,
 
   std::size_t offset = 0;
   const Node* node = nodeAt(position_, offset);
-  std::uint64_t remaining = length;
+  u64 remaining = length;
   while (remaining != 0 && node) {
-    const auto count = std::min<std::uint64_t>(
-        remaining, static_cast<std::uint64_t>(node->size - offset));
+    const auto count = std::min<u64>(
+        remaining, static_cast<u64>(node->size - offset));
     iovec buffer{};
     buffer.iov_base = const_cast<char*>(node->ptr + offset);
     buffer.iov_len = static_cast<std::size_t>(count);
@@ -552,13 +553,13 @@ std::uint64_t ByteArray::getReadBuffers(std::vector<iovec>& buffers,
   return length - remaining;
 }
 
-std::uint64_t ByteArray::getReadBuffers(std::vector<iovec>& buffers,
-                                        std::uint64_t length,
-                                        std::uint64_t position) const {
+u64 ByteArray::getReadBuffers(std::vector<iovec>& buffers,
+                                        u64 length,
+                                        u64 position) const {
   if (position > size_) {
     return 0;
   }
-  const auto readable = static_cast<std::uint64_t>(size_ - position);
+  const auto readable = static_cast<u64>(size_ - position);
   length = std::min(length, readable);
   if (length == 0) {
     return 0;
@@ -566,10 +567,10 @@ std::uint64_t ByteArray::getReadBuffers(std::vector<iovec>& buffers,
 
   std::size_t offset = 0;
   const Node* node = nodeAt(static_cast<std::size_t>(position), offset);
-  std::uint64_t remaining = length;
+  u64 remaining = length;
   while (remaining != 0 && node) {
-    const auto count = std::min<std::uint64_t>(
-        remaining, static_cast<std::uint64_t>(node->size - offset));
+    const auto count = std::min<u64>(
+        remaining, static_cast<u64>(node->size - offset));
     iovec buffer{};
     buffer.iov_base = const_cast<char*>(node->ptr + offset);
     buffer.iov_len = static_cast<std::size_t>(count);
@@ -581,8 +582,8 @@ std::uint64_t ByteArray::getReadBuffers(std::vector<iovec>& buffers,
   return length - remaining;
 }
 
-std::uint64_t ByteArray::getWriteBuffers(std::vector<iovec>& buffers,
-                                         std::uint64_t length) {
+u64 ByteArray::getWriteBuffers(std::vector<iovec>& buffers,
+                                         u64 length) {
   if (length == 0) {
     return 0;
   }
@@ -591,10 +592,10 @@ std::uint64_t ByteArray::getWriteBuffers(std::vector<iovec>& buffers,
 
   std::size_t offset = 0;
   Node* node = nodeAt(position_, offset);
-  std::uint64_t remaining = length;
+  u64 remaining = length;
   while (remaining != 0 && node) {
-    const auto count = std::min<std::uint64_t>(
-        remaining, static_cast<std::uint64_t>(node->size - offset));
+    const auto count = std::min<u64>(
+        remaining, static_cast<u64>(node->size - offset));
     iovec buffer{};
     buffer.iov_base = node->ptr + offset;
     buffer.iov_len = static_cast<std::size_t>(count);

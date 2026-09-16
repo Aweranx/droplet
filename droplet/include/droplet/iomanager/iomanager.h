@@ -1,5 +1,7 @@
 #pragma once
 
+#include <droplet/types.h>
+
 #include <droplet/export.h>
 #include <droplet/scheduler/scheduler.h>
 #include <droplet/timer/timer.h>
@@ -27,7 +29,7 @@ namespace droplet {
 class DROPLET_API IOManager final : public Scheduler, public TimerManager {
  public:
   using Ptr = std::shared_ptr<IOManager>;
-  using EventMask = uint32_t;
+  using EventMask = u32;
 
   static constexpr EventMask NONE = 0;
   static constexpr EventMask READ = 1u << 0;
@@ -104,21 +106,21 @@ class DROPLET_API IOManager final : public Scheduler, public TimerManager {
 
   static constexpr size_t kMaxEpollEvents = 64;
   static constexpr int kMaxTrackedFd = 1 << 20;
-  static constexpr uint64_t kTickleTag = 1;
+  static constexpr u64 kTickleTag = 1;
 
   FdContext* getFdContext(int fd, bool auto_create);
   bool updateEpoll(FdContext& context, EventMask events);
-  static uint32_t toEpollEvents(EventMask events) noexcept;
+  static u32 toEpollEvents(EventMask events) noexcept;
   static bool validEvent(EventMask event) noexcept;
 
   void trigger(EventContext&& context);
-  bool processEvent(const void* epoll_data, uint32_t epoll_events);
+  bool processEvent(const void* epoll_data, u32 epoll_events);
   void drainTickle() noexcept;
   void clearAllEventsWithoutResume() noexcept;
 
   int epoll_fd_{-1};
   int tickle_fd_{-1};
-  uint64_t wake_count_{1};
+  u64 wake_count_{1};
   mutable std::mutex fd_contexts_mutex_;
   std::vector<std::unique_ptr<FdContext>> fd_contexts_;
   std::atomic<size_t> pending_event_count_{0};

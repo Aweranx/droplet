@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <droplet/types.h>
 
 #include <array>
 #include <atomic>
@@ -23,24 +24,24 @@ constexpr std::array<std::size_t, 6> kMessageSizes = {
     50, 100, 200, 500, 1000, 2048};
 
 // 防止编译器把基准循环中的结果优化掉。
-std::atomic<std::uint64_t> benchmark_sink{0};
+std::atomic<u64> benchmark_sink{0};
 
 // 测试使用日志消息相同的内联容量，消息超过容量时会自动切换到堆内存。
 using Buffer =
     droplet::detail::InlineBuffer<droplet::detail::LOG_MESSAGE_INLINE_CAPACITY>;
 
 // 生成轻量校验值，既能比较写入结果，也能防止基准循环被优化掉。
-std::uint64_t Observe(std::string_view value) noexcept {
+u64 Observe(std::string_view value) noexcept {
   if (value.empty()) {
     return 0;
   }
-  return static_cast<std::uint64_t>(value.size()) +
+  return static_cast<u64>(value.size()) +
          static_cast<unsigned char>(value.front()) +
          static_cast<unsigned char>(value[value.size() / 2]) +
          static_cast<unsigned char>(value.back());
 }
 
-std::uint64_t WriteWithSmallStreamBuffer(std::string_view message) {
+u64 WriteWithSmallStreamBuffer(std::string_view message) {
   Buffer buffer;
   droplet::detail::SmallStreamBuffer<
       droplet::detail::LOG_MESSAGE_INLINE_CAPACITY>
@@ -51,7 +52,7 @@ std::uint64_t WriteWithSmallStreamBuffer(std::string_view message) {
 }
 
 // 使用标准字符串流作为对照组，比较两种写入方式的结果和性能。
-std::uint64_t WriteWithStringStream(std::string_view message) {
+u64 WriteWithStringStream(std::string_view message) {
   std::stringstream stream;
   stream << message;
   return Observe(stream.view());
@@ -61,7 +62,7 @@ template <typename Operation>
 // 执行指定次数并返回总耗时；checksum 会写入全局变量，避免循环被消除。
 std::chrono::nanoseconds BenchmarkWrites(std::size_t operations,
                                           Operation&& operation) {
-  std::uint64_t checksum = 0;
+  u64 checksum = 0;
   const auto begin = std::chrono::steady_clock::now();
   for (std::size_t iteration = 0; iteration < operations; ++iteration) {
     checksum += operation();

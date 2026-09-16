@@ -1,4 +1,5 @@
 #include "droplet/socket/fd_manager.h"
+#include <droplet/types.h>
 
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -48,9 +49,9 @@ bool FdCtx::init() noexcept {
       if (::syscall(SYS_getsockopt, fd_, SOL_SOCKET, option, &timeout,
                     &length) == 0) {
         const bool no_timeout = timeout.tv_sec == 0 && timeout.tv_usec == 0;
-        const uint64_t milliseconds =
-            static_cast<uint64_t>(timeout.tv_sec) * 1000 +
-            static_cast<uint64_t>(timeout.tv_usec + 999) / 1000;
+        const u64 milliseconds =
+            static_cast<u64>(timeout.tv_sec) * 1000 +
+            static_cast<u64>(timeout.tv_usec + 999) / 1000;
         setTimeout(option, no_timeout ? UINT64_MAX : milliseconds);
       }
     }
@@ -60,7 +61,7 @@ bool FdCtx::init() noexcept {
   return true;
 }
 
-void FdCtx::setTimeout(int option, uint64_t milliseconds) noexcept {
+void FdCtx::setTimeout(int option, u64 milliseconds) noexcept {
   if (option == SO_RCVTIMEO) {
     recv_timeout_.store(milliseconds, std::memory_order_release);
   } else if (option == SO_SNDTIMEO) {
@@ -68,7 +69,7 @@ void FdCtx::setTimeout(int option, uint64_t milliseconds) noexcept {
   }
 }
 
-uint64_t FdCtx::getTimeout(int option) const noexcept {
+u64 FdCtx::getTimeout(int option) const noexcept {
   if (option == SO_RCVTIMEO) {
     return recv_timeout_.load(std::memory_order_acquire);
   }

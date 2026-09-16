@@ -1,4 +1,5 @@
 #include "droplet/timer/timer.h"
+#include <droplet/types.h>
 
 #include <droplet/macros.h>
 
@@ -11,9 +12,9 @@ namespace droplet {
 
 namespace {
 
-uint64_t NowMilliseconds() noexcept {
+u64 NowMilliseconds() noexcept {
   using namespace std::chrono;
-  return static_cast<uint64_t>(
+  return static_cast<u64>(
       duration_cast<milliseconds>(steady_clock::now().time_since_epoch())
           .count());
 }
@@ -30,14 +31,14 @@ bool Timer::refresh() {
   return manager && manager->refreshTimer(*this);
 }
 
-bool Timer::reset(uint64_t ms, bool from_now) {
+bool Timer::reset(u64 ms, bool from_now) {
   TimerManager* manager = manager_.load(std::memory_order_acquire);
   return manager && manager->resetTimer(*this, ms, from_now);
 }
 
 TimerManager::~TimerManager() { clearTimers(); }
 
-TimerManager::TimerPtr TimerManager::addTimer(uint64_t ms,
+TimerManager::TimerPtr TimerManager::addTimer(u64 ms,
                                               std::function<void()> cb,
                                               bool recurring) {
   DROPLET_ASSERT(cb);
@@ -45,7 +46,7 @@ TimerManager::TimerPtr TimerManager::addTimer(uint64_t ms,
     return nullptr;
   }
 
-  const uint64_t now = NowMilliseconds();
+  const u64 now = NowMilliseconds();
   TimerPtr timer;
   bool at_front = false;
   {
@@ -62,7 +63,7 @@ TimerManager::TimerPtr TimerManager::addTimer(uint64_t ms,
 }
 
 TimerManager::TimerPtr TimerManager::addConditionTimer(
-    uint64_t ms, std::function<void()> cb, std::weak_ptr<void> condition,
+    u64 ms, std::function<void()> cb, std::weak_ptr<void> condition,
     bool recurring) {
   DROPLET_ASSERT(cb);
   if (!cb) {
@@ -79,20 +80,20 @@ TimerManager::TimerPtr TimerManager::addConditionTimer(
       recurring);
 }
 
-uint64_t TimerManager::getNextTimer() const {
+u64 TimerManager::getNextTimer() const {
   std::lock_guard<std::mutex> lock(timer_mutex_);
   if (timers_.empty()) {
-    return std::numeric_limits<uint64_t>::max();
+    return std::numeric_limits<u64>::max();
   }
 
-  const uint64_t now = NowMilliseconds();
-  const uint64_t next = (*timers_.begin())->next_;
+  const u64 now = NowMilliseconds();
+  const u64 next = (*timers_.begin())->next_;
   return next <= now ? 0 : next - now;
 }
 
 void TimerManager::listExpiredCallbacks(
     std::vector<std::function<void()>>& cbs) {
-  const uint64_t now = NowMilliseconds();
+  const u64 now = NowMilliseconds();
 
   {
     std::lock_guard<std::mutex> lock(timer_mutex_);
@@ -112,7 +113,7 @@ void TimerManager::listExpiredCallbacks(
         // 0ms recurring timer 也必须向前推进，否则同一次扫描会无限
         // 重新命中同一个定时器。
         timer->next_ =
-            now + std::max<uint64_t>(timer->ms_.load(std::memory_order_acquire),
+            now + std::max<u64>(timer->ms_.load(std::memory_order_acquire),
                                      1);
         timers_.insert(timer);
         cbs.push_back(timer->cb_);
@@ -189,7 +190,7 @@ bool TimerManager::refreshTimer(Timer& timer) {
   return true;
 }
 
-bool TimerManager::resetTimer(Timer& timer, uint64_t ms, bool from_now) {
+bool TimerManager::resetTimer(Timer& timer, u64 ms, bool from_now) {
   bool at_front = false;
   {
     std::lock_guard<std::mutex> lock(timer_mutex_);
@@ -205,8 +206,8 @@ bool TimerManager::resetTimer(Timer& timer, uint64_t ms, bool from_now) {
     }
     timers_.erase(it);
 
-    const uint64_t old_ms = timer.ms_.load(std::memory_order_acquire);
-    const uint64_t start = from_now ? NowMilliseconds() : timer.next_ - old_ms;
+    const u64 old_ms = timer.ms_.load(std::memory_order_acquire);
+    const u64 start = from_now ? NowMilliseconds() : timer.next_ - old_ms;
     timer.ms_.store(ms, std::memory_order_release);
     timer.next_ = start + ms;
     at_front = timers_.empty() || TimerComparator{}(ptr, *timers_.begin());
