@@ -1,21 +1,21 @@
 # 配置模块 config
 
-
 ## 核心概念
 
 配置模块解决一个问题：程序里散落各处的参数（端口、级别、超时……）统一注册、
 统一从 YAML 加载、值变化时可感知。
 
-- **ConfigVarBase**：配置变量的抽象基类，统一 `toString()/fromString()/getTypeName()`
+- **ConfigVarBase**：一个yaml kv配置项的抽象基类，统一 `toString()/fromString()/getTypeName()`
   接口，让 Config 可以用一张表管理所有不同类型的变量。
 - **ConfigVar<T>**：模板子类，真正持有值。带读写锁保护和值变更回调。
-- **LexicalCast<F, T>**：类型转换仿函数族。YAML 字符串与基础类型、
-  STL 容器之间互转的桥梁。
-- **Config**：管理类，静态入口负责查找/创建变量、加载 YAML、遍历。
+- **ConfigConvert**：yaml node与c++对象的转换，可以用偏特化加入不同对象的转换逻辑，如test里手动实现person的偏特化
+- **Config**：管理所有的配置项，静态入口负责查找/创建变量、加载 YAML、遍历。
 
-## 流程
+## pipeline
 
 ### 注册与读取
+
+使用`LoadFromConfDir`从目录中读取所有的配置文件
 
 程序启动时（或在需要的地方首次使用时）声明配置项，拿到 `ConfigVar<T>` 后
 通过 `getValue()/setValue()` 读写：
@@ -30,7 +30,7 @@ port->toString();          // int -> YAML 字符串 "1234"
 
 ### YAML 加载
 
-YAML 树先被 `ListAllMember` 深度优先扁平化成 `a.b.c` 形式的键，再逐个与
+YAML 树先被 `CollectMember` 深度优先扁平化成 `a.b.c` 形式的键，再逐个与
 已注册变量匹配；只有已注册的键会被加载，未注册的键直接忽略：
 
 ```yaml
@@ -43,7 +43,7 @@ system:
 
 ```
 YAML::Node(root)
-    │ ListAllMember 深度优先扁平化（键逐段转小写）
+    │ CollectMember 深度优先扁平化（键逐段转小写）
     ▼
 std::list<(key, node)>            "system.port" -> 9092
     │ LoadFromYaml 逐键处理
@@ -62,47 +62,29 @@ ConfigVar::setValue(new_value)
 
 ## 实现细节
 
-### LexicalCast 的递归展开
+### ConfigConvert
+实现`FromNode`和`ToNode`，来完成`YAML::Node`与c++对象的转化。
+使用`is_same_v`依次比较是 bool、string、enum还是用户自定义类型，然后调用对应的解析逻辑。
+自定义类型需要自己来特化droplet::ConfigConvert<T> 或 YAML::convert<T>。
+将`SequenceConvert`和`StringMapConvert`添加为`ConfigConvert`的偏特化分别处理序列容器和map。
 
-主模板基于 `std::stringstream`（`operator<<`/`operator>>`）完成基础类型互转，
-转换失败或解析后残留字符时抛 `std::runtime_error`。容器转换通过片特化递归：
-`LexicalCast<std::string, std::vector<T>>` 先把整串 `YAML::Load` 成节点，
-再对每个元素还原成 YAML 文本，递归调用 `LexicalCast<std::string, T>`，
-因此 `vector<vector<int>>` 这类嵌套容器天然支持；反方向
-`LexicalCast<std::vector<T>, std::string>` 是它的逆过程。
-
-12 个容器特化（vector/list/set/unordered_set 与 map/unordered_map 的双向）
-只写了一份序列/映射的通用算法，用 `requires` 表达式区分追加方式：
-
-```cpp
-template <class Container, class Value>
-void InsertTo(Container& c, Value&& v) {
-  if constexpr (requires { c.push_back(v); }) c.push_back(v);
-  else c.insert(v);
-}
-```
-
-用户自定义类型想接入配置，按同样方式给它补一对
-`LexicalCast<std::string, MyType>` / `LexicalCast<MyType, std::string>` 特化即可，
-`ConfigVar<MyType>` 无需改动。
 
 ### TypeName 编译期取类型名
 
-sylar 用 boost::typeindex 打印类型名。这里用 GCC 的 `__PRETTY_FUNCTION__`
+用 GCC 的 `__PRETTY_FUNCTION__`
 在 `constexpr` 中截取 `[with T = ...]` 段，编译期得到
 `"int"`、`"std::vector<int>"` 这类可读名称，零运行时开销、零依赖。
 类型不匹配的诊断信息（Lookup 返回 nullptr 时）就来自它。
 
 ### 读写锁与回调时机
 
-- 每个 `ConfigVar` 一把 `std::shared_mutex`（替代 sylar 自研的
-  pthread_rwlock 封装）：`getValue()/toString()` 走读锁，`setValue()`
-  和回调表增删走写锁。
+- 每个 `ConfigVar` 一把 `std::shared_mutex`：
+  `getValue()/toString()` 走读锁，`setValue()`和回调表增删走写锁。
 - `setValue()` 在写锁内完成"比较 + 赋值"，随后在**锁外**快照回调表并逐个
   通知。回调里可以安全调用 `getValue()/toString()`，不会因锁重入死锁
-  （sylar 在读锁内执行回调，回调再取读锁时有写者排队即死锁的隐患）。
 - `Config::Visit()` 同样只持锁做快照，回调在锁外执行。
 - `Config` 的全局表与锁是函数局部 static（Meyers 手法），规避静态初始化顺序问题。
+- 基本上所有的需要持有配置项的操作都使用先加锁获取配置项snapshot然后再操作，减少阻塞。
 
 ### 值变更回调
 
@@ -121,16 +103,7 @@ var->delListener(id);   // 值未变化的 setValue 不会触发回调
 `Config::LoadFromConfDir(path, force)` 用 `std::filesystem` 枚举目录下全部
 `.yml/.yaml`（按路径排序保证顺序确定），记录每个文件的 `last_write_time`：
 `force=false` 时 mtime 未变化的文件直接跳过，`force=true` 强制重载。
-替代 sylar 的 `FSUtil::ListAllFile` + `lstat` 手法；目录不存在只记日志不抛异常。
 
-### 相对 sylar 修复的问题
-
-| 问题 | sylar 行为 | droplet 行为 |
-| --- | --- | --- |
-| `fromString` 成功时 | `catch` 后统一 `return false`，永远返回 false | 成功返回 true |
-| 名称合法字符 | `"012345678"` 漏了 `'9'`，含 9 的名字被判非法 | `[0-9a-z_.]` 完整校验 |
-| YAML 键大小写 | 键必须全小写，大写键被静默丢弃 | 键逐段转小写后再匹配 |
-| 失败的 YAML 文件 | 异常吞掉后无定位信息 | 记录文件名与异常内容 |
 
 ### 从 YAML 字符串到 bool
 
@@ -170,14 +143,5 @@ int main() {
 
 配置模块以"YAML 字符串作为统一序列化载体"为轴心：`LexicalCast` 特化族负责
 字符串与各类型（含嵌套容器）的互转，`ConfigVar<T>` 用读写锁保护值并在变化时
-通知回调，`Config` 用一张全局表把注册、加载、遍历串起来。相比 sylar，
-主要差异是 C++23 化（`requires`、编译期 `TypeName`、`std::filesystem`、
-`std::shared_mutex`）以及修复了上表中的几处原版缺陷；头文件只依赖
-yaml-cpp（FetchContent 随库编译），无 boost 依赖。
+通知回调，`Config` 用一张全局表把注册、加载、遍历串起来。
 
-## TODO
-
-- 支持自定义类型的自动注册（反射/编译期类型表），免除手写 LexicalCast 特化。
-- 配置文件变更监听（inotify）+ 自动重载，当前只能手动周期调用
-  `LoadFromConfDir`。
-- 环境变量/命令行参数覆盖配置项。

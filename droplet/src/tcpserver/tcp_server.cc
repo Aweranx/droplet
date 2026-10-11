@@ -17,7 +17,7 @@ namespace droplet {
 
 namespace {
 
-ConfigVar<u64>::Ptr TcpServerRecvTimeout() {
+ConfigVar<u64>::ptr TcpServerRecvTimeout() {
   static auto timeout = Config::Lookup<u64>(
       "tcp_server.read_timeout", TcpServer::kDefaultRecvTimeoutMs,
       "TCP server client receive timeout in milliseconds");

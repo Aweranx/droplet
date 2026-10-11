@@ -1,6 +1,8 @@
-## 流程
+# 日志模块 logger
+
+## pipeline
 创建一个Logger，然后给logger添加appender。
-使用DROPLET_LOG_DEBUG(logger)，创建一个LogLine，这个LogLine以及他的impl会在构造时获取所有的日志信息，然后在析构时调用logger的submit提交构建的record。
+使用`DROPLET_LOG_DEBUG(logger)`，创建一个`LogLine`，这个`LogLine`以及他的impl会在构造时获取所有的日志信息，然后在析构时调用`logger的submit`提交构建的record。
 logger通过拿到pattern来设置Impl的formatter，在logger的submit里，先声明一个InlineBuffer，然后把拿到的record通过formatter format到InlineBuffer里，然后依次调用appender的append
 输出日志。
 appender在遇到fatal日志时会调用flush把数据从程序的内存刷到操作系统缓冲区。
@@ -34,9 +36,9 @@ Logger::Impl::submit里把一条record进行format到buffer，然后把buffer里
 对外提供宏，使用RAII完成日志采集
 
 
-# 优化
+## 优化
 
-## PImpl 隐藏实现架构
+### PImpl 隐藏实现架构
 Logger   导出api里可以看到的类
     ↓ unique_ptr<Logger::Impl>
 Logger::Impl    仅声明不导出
@@ -51,7 +53,7 @@ Access 控制内部代码如何访问私有实现；
 用户只依赖稳定的公开类和智能指针接口。
 
 
-## 自留空间缓冲区
+### 自留空间缓冲区
 SBO针对小对象进行优化，直接在栈上分配一块byte数组，当超过阈值时才在堆上分配。
 每条日志的信息基本都会走缓冲区构建,测试与直接使用stringstream对比速度是他的两倍。
 ```cpp
@@ -117,7 +119,7 @@ DROPLET_LOG_INFO(logger) << "id=" << id;
 
 
 ## 总结
-我实现的是一个同步低分配日志系统。日志入口先做级别短路，过滤日志不会创建 LogLine 或进行格式化；LogLine 使用内联 PImpl，消息和最终记录使用 Small Buffer Optimization，短日志走栈内存，长日志才回退到堆。Formatter 的 pattern 只解析一次，整数使用 to_chars，时间按秒使用线程局部缓存，线程 ID 也按线程缓存。格式化结果通过 string_view 在多个 Appender 间复用，避免重复格式化和字符串复制。并发方面使用 atomic level、shared_mutex 和 Appender 独立锁，普通日志不主动 flush，从而降低锁和 I/O 开销。
+实现的是一个同步低分配日志系统。日志入口先做级别短路，过滤日志不会创建 LogLine 或进行格式化；LogLine 使用内联 PImpl，消息和最终记录使用 Small Buffer Optimization，短日志走栈内存，长日志才回退到堆。Formatter 的 pattern 只解析一次，整数使用 to_chars，时间按秒使用线程局部缓存，线程 ID 也按线程缓存。格式化结果通过 string_view 在多个 Appender 间复用，避免重复格式化和字符串复制。并发方面使用 atomic level、shared_mutex 和 Appender 独立锁，普通日志不主动 flush，从而降低锁和 I/O 开销。
 当前是同步日志，不是异步日志；
 
 ## TODO

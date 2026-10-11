@@ -1,0 +1,36 @@
+test:
+    port: 5005
+    int_vec:
+        - 10
+        - 20
+        - 30
+    int_list: [40, 50, 60, 40]
+    int_set:
+        - 20
+        - 30
+        - 40
+        - 20      
+    int_unordered_set: [20, 30, 40, 20]
+    str_int_map:
+        k: 30
+        k1: 20
+        k2: 40
+    str_int_umap:
+        k: 30
+        k1: 20
+        k2: 40
+
+class:
+    person:
+        name: XXX
+        age:  107
+        sex:  true
+    map:
+        pans01:
+            name: ranx
+            age:  108
+            sex:  true
+        pans02:
+            name: 冉行
+            age:  109
+            sex:  true
